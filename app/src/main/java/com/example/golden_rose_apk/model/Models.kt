@@ -43,8 +43,11 @@ data class CheckoutItem(
 data class BlogPost(
     val id: Int,
     val title: String,
+    val author: String,
     val date: String,
     val preview: String,
-    val content: String
+    val likes: Int = 0,
+    val content: String,
+    val comments: Int = 0
 )
 
