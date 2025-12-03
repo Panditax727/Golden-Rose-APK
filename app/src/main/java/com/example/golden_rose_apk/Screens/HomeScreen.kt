@@ -17,23 +17,17 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.filled.Notifications
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
-
     var searchText by remember { mutableStateOf("") }
 
     // Categorías principales
@@ -49,17 +43,17 @@ fun HomeScreen(navController: NavController) {
         Product("Vandal Reaver", "$199.99", Color(0xFFE3F2FD)),
         Product("Knife Champions", "$159.99", Color(0xFFF3E5F5)),
         Product("Marshal Forajida", "$89.99", Color(0xFFE8F5E8)),
-        Product("Opeerator Chaocaos", "$299.99", Color(0xFFFFF3E0))
+        Product("Operator Chaocaos", "$299.99", Color(0xFFFFF3E0))
     )
 
     // Barra de navegación inferior
     val navItems = listOf(
-        BottomNavItem("Inicio", Icons.Filled.Home),
-        BottomNavItem("Categorías", Icons.Filled.Category),
-        BottomNavItem("Blogs", Icons.Filled.Article),
-        BottomNavItem("Perfil", Icons.Filled.Person)
+        BottomNavItem("Inicio", Icons.Filled.Home, "home"),
+        BottomNavItem("Categorías", Icons.Filled.Category, "categories"),
+        BottomNavItem("Blogs", Icons.Filled.Article, "blogs"),
+        BottomNavItem("Perfil", Icons.Filled.Person, "perfil")
     )
-    var selectedNavItem by remember { mutableStateOf("Inicio") }
+
     Scaffold(
         topBar = {
             // TOP BAR CON MÚLTIPLES BOTONES
@@ -102,10 +96,8 @@ fun HomeScreen(navController: NavController) {
                                 tint = Color.White
                             )
                         },
-                        
                         singleLine = true
                     )
-
 
                     // Botón de notificaciones (campana)
                     IconButton(
@@ -114,20 +106,19 @@ fun HomeScreen(navController: NavController) {
                     ) {
                         Icon(
                             Icons.Filled.Notifications,
-                            contentDescription = "Campanita",
+                            contentDescription = "Notificaciones",
                             tint = Color.White
                         )
                     }
 
-
                     // Botón de corazón (favoritos)
                     IconButton(
-                        onClick = { /* Abrir filtros */ },
+                        onClick = { navController.navigate("favorites") },
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
                             Icons.Filled.Favorite,
-                            contentDescription = "Campanita",
+                            contentDescription = "Favoritos",
                             tint = Color.White
                         )
                     }
@@ -163,10 +154,9 @@ fun HomeScreen(navController: NavController) {
             }
         },
         bottomBar = {
-            BottomNavigationBar(
-                navItems = navItems,
-                selectedItem = selectedNavItem,
-                onItemSelected = { selectedNavItem = it }
+            HomeBottomNavigationBar(
+                navController = navController,
+                navItems = navItems
             )
         }
     ) { innerPadding ->
@@ -179,6 +169,22 @@ fun HomeScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Hora y saludo
+            Column {
+                Text(
+                    text = "9:30",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+                Text(
+                    text = "Bienvenido a Golden Rose",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF5649A5)
+                )
+            }
 
             // Categorías principales
             Text(
@@ -213,7 +219,7 @@ fun HomeScreen(navController: NavController) {
                     text = "Ver todo →",
                     fontSize = 14.sp,
                     color = Color(0xFF5649A5),
-                    modifier = Modifier.clickable { /* Navegar a productos */ }
+                    modifier = Modifier.clickable { navController.navigate("all_products") }
                 )
             }
 
@@ -225,68 +231,12 @@ fun HomeScreen(navController: NavController) {
                 modifier = Modifier.height(400.dp)
             ) {
                 items(topProducts) { product ->
-                    ProductCard(product = product)
+                    ProductCard(product = product, navController = navController)
                 }
             }
 
-            Spacer(modifier = Modifier.height(80.dp)) // Espacio para bottom bar
+            Spacer(modifier = Modifier.height(80.dp))
         }
-    }
-}
-
-@Composable
-fun DownBar(navController: NavController) {
-
-    val currentBackStackEntry = navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry.value?.destination?.route
-
-    NavigationBar(
-        containerColor = Color(0xFF5649A5),
-    ) {
-        NavigationBarItem(
-            selected = currentRoute == "home",
-            onClick = {
-                navController.navigate("home") {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId)
-                }
-            },
-            label = { Text("Inicio", color = if (currentRoute == "home") Color.White else Color.LightGray) },
-            icon = { Icon(Icons.Default.Home, contentDescription = null, tint = if (currentRoute == "home") Color.White else Color.LightGray) }
-        )
-        NavigationBarItem(
-            selected = currentRoute == "categorias",
-            onClick = {
-                navController.navigate("categorias") {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId)
-                }
-            },
-            label = { Text("Categorías", color = if (currentRoute == "categorias") Color.White else Color.LightGray) },
-            icon = { Icon(Icons.Default.List, contentDescription = null, tint = if (currentRoute == "categorias") Color.White else Color.LightGray) }
-        )
-        NavigationBarItem(
-            selected = currentRoute == "blogs",
-            onClick = {
-                navController.navigate("blogs") {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId)
-                }
-            },
-            label = { Text("Blogs", color = if (currentRoute == "blogs") Color.White else Color.LightGray) },
-            icon = { Icon(Icons.Default.List, contentDescription = null, tint = if (currentRoute == "blogs") Color.White else Color.LightGray) }
-        )
-        NavigationBarItem(
-            selected = currentRoute == "perfil",
-            onClick = {
-                navController.navigate("perfil") {
-                    launchSingleTop = true
-                    popUpTo(navController.graph.startDestinationId)
-                }
-            },
-            label = { Text("Perfil", color = if (currentRoute == "perfil") Color.White else Color.LightGray) },
-            icon = { Icon(Icons.Default.Person, contentDescription = null, tint = if (currentRoute == "perfil") Color.White else Color.LightGray) }
-        )
     }
 }
 
@@ -338,11 +288,11 @@ fun CategoryCard(category: Category) {
 
 // Componente de tarjeta de producto
 @Composable
-fun ProductCard(product: Product) {
+fun ProductCard(product: Product, navController: NavController) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Ver detalles del producto */ },
+            .clickable { navController.navigate("product_detail/${product.name}") },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -352,7 +302,7 @@ fun ProductCard(product: Product) {
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            // Imagen del producto (placeholder)
+            // Imagen del producto
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -406,32 +356,39 @@ fun ProductCard(product: Product) {
     }
 }
 
-// Barra de navegación inferior
+// Barra de navegación inferior ESPECÍFICA para HomeScreen
 @Composable
-fun BottomNavigationBar(
-    navItems: List<BottomNavItem>,
-    selectedItem: String,
-    onItemSelected: (String) -> Unit
+fun HomeBottomNavigationBar(
+    navController: NavController,
+    navItems: List<BottomNavItem>
 ) {
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+
     NavigationBar(
-        containerColor = Color.White,
-        modifier = Modifier.shadow(elevation = 8.dp)
+        containerColor = Color.White
     ) {
         navItems.forEach { item ->
             NavigationBarItem(
-                selected = selectedItem == item.title,
-                onClick = { onItemSelected(item.title) },
+                selected = currentRoute == item.route,
+                onClick = {
+                    navController.navigate(item.route) {
+                        // Configuración para evitar múltiples instancias
+                        launchSingleTop = true
+                        // Restaurar estado si ya está en la pila
+                        restoreState = true
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (selectedItem == item.title) Color(0xFF5649A5) else Color.Gray
+                        tint = if (currentRoute == item.route) Color(0xFF5649A5) else Color.Gray
                     )
                 },
                 label = {
                     Text(
                         text = item.title,
-                        color = if (selectedItem == item.title) Color(0xFF5649A5) else Color.Gray
+                        color = if (currentRoute == item.route) Color(0xFF5649A5) else Color.Gray
                     )
                 }
             )
@@ -451,10 +408,6 @@ data class Product(
     val backgroundColor: Color
 )
 
-data class BottomNavItem(
-    val title: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
-)
 
 
 @Preview(showBackground = true, showSystemUi = true)
