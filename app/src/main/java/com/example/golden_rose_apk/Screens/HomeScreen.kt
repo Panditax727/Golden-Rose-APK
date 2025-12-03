@@ -24,10 +24,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.golden_rose_apk.model.BottomNavItem
+import com.example.golden_rose_apk.model.Category
+import com.example.golden_rose_apk.model.Product
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController) {
+
+
     var searchText by remember { mutableStateOf("") }
 
     // Categorías principales
@@ -396,17 +402,6 @@ fun HomeBottomNavigationBar(
     }
 }
 
-// Data Classes
-data class Category(
-    val name: String,
-    val color: Color
-)
-
-data class Product(
-    val name: String,
-    val price: String,
-    val backgroundColor: Color
-)
 
 
 
