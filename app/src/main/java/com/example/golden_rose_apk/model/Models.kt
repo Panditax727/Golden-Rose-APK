@@ -3,7 +3,7 @@ package com.example.golden_rose_apk.model
 import androidx.compose.ui.graphics.vector.ImageVector
 
 data class LoginRequest(
-    val username: String,
+    val email:  String,
     val password: String
 )
 

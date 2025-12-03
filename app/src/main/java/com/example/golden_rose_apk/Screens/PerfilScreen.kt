@@ -67,19 +67,12 @@ fun PerfilScreen(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_profile_placeholder),
-                    contentDescription = "Foto de Perfil",
-                    modifier = Modifier
-                        .size(64.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
+
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(username, style = MaterialTheme.typography.headlineSmall)
             }
             TextButton(
-                onClick = { navController.navigate(AppScreens.EditProfileScreen.route) },
+                onClick = { navController.navigate("edit_profile") },
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp)
             ) {
                 Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))

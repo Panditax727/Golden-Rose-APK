@@ -176,14 +176,7 @@ fun HomeScreen(navController: NavController) {
         ) {
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Hora y saludo
             Column {
-                Text(
-                    text = "9:30",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
                 Text(
                     text = "Bienvenido a Golden Rose",
                     fontSize = 18.sp,
