@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,17 +29,18 @@ import androidx.navigation.compose.rememberNavController
 import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.model.Category
 import com.example.golden_rose_apk.model.Product
+import androidx.navigation.compose.currentBackStackEntryAsState
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(navController: NavController, isGuest: Boolean) {
-    if (isGuest) {
-        Text("Bienvenido invitado")
-        // Mostrar contenido limitado
+    val greeting = if (isGuest) {
+        "Bienvenido Invitado a Golden Rose"
     } else {
-        Text("Bienvenido, usuario")
-        // Mostrar todo el contenido
+        "Bienvenido a Golden Rose"
     }
 
     var searchText by remember { mutableStateOf("") }
@@ -68,27 +71,29 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
 
     Scaffold(
         topBar = {
-            // TOP BAR CON MÚLTIPLES BOTONES
-
+            // TOP BAR CON MÚLTIPLES BOTONES - VERSIÓN MEJORADA
             Box(
-
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
                     .background(Color(0xFF5649A5))
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
-
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp) // Un poco más de espacio
                 ) {
-                    // Barra de búsqueda
+                    // Barra de búsqueda - MEJORADA
                     OutlinedTextField(
                         value = searchText,
                         onValueChange = { searchText = it },
-                        label = { Text("¿Qué buscas?") },
+                        label = {
+                            Text(
+                                "¿Qué buscas?",
+                                color = Color.White.copy(alpha = 0.8f)
+                            )
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(45.dp),
@@ -96,13 +101,13 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
-                            focusedLabelColor = Color.White.copy(alpha = 0.8f),
+                            focusedLabelColor = Color.White.copy(alpha = 0.9f), // Más visible
                             unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             cursorColor = Color.White,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent
+                            focusedContainerColor = Color.White.copy(alpha = 0.1f), // Fondo sutil
+                            unfocusedContainerColor = Color.White.copy(alpha = 0.05f)
                         ),
                         leadingIcon = {
                             Icon(
@@ -111,58 +116,109 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                                 tint = Color.White
                             )
                         },
-                        singleLine = true
+                        trailingIcon = {
+                            Icon(
+                                Icons.Filled.Search,
+                                contentDescription = "Buscar",
+                                tint = Color.White.copy(alpha = 0.8f)
+                            )
+                        },
+
+                        singleLine = true,
+                        placeholder = {
+                            Text(
+                                "Buscar productos...",
+                                color = Color.White.copy(alpha = 0.5f) // Placeholder visible
+                            )
+                        }
                     )
 
-                    // Botón de notificaciones (campana)
-                    IconButton(
-                        onClick = { /* Abrir filtros */ },
-                        modifier = Modifier.size(40.dp)
+                    // Botón de notificaciones (campana) - MEJORADO
+                    Box(
+                        modifier = Modifier.size(42.dp) // Un poco más grande
                     ) {
-                        Icon(
-                            Icons.Filled.Notifications,
-                            contentDescription = "Notificaciones",
-                            tint = Color.White
-                        )
+                        IconButton(
+                            onClick = { /* Abrir filtros */ },
+                            modifier = Modifier.size(42.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = Color.Transparent
+                            )
+                        ) {
+                            Icon(
+                                Icons.Filled.Notifications,
+                                contentDescription = "Notificaciones",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp) // Icono más grande
+                            )
+                        }
+
+                        // Badge opcional de notificaciones (si quieres)
+                        /*
+                        Box(
+                            modifier = Modifier
+                                .size(14.dp)
+                                .background(Color.Red, CircleShape)
+                                .align(Alignment.TopEnd)
+                        ) {
+                            Text(
+                                text = "1",
+                                color = Color.White,
+                                fontSize = 8.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.align(Alignment.Center)
+                            )
+                        }
+                        */
                     }
 
-                    // Botón de corazón (favoritos)
+                    // Botón de corazón (favoritos) - MEJORADO
                     if (!isGuest) {
                         IconButton(
                             onClick = { navController.navigate("favorites") },
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(42.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = Color.Transparent
+                            )
                         ) {
                             Icon(
                                 Icons.Filled.Favorite,
                                 contentDescription = "Favoritos",
-                                tint = Color.White
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
 
-                    // Botón de carrito
+                    // Botón de carrito - MEJORADO
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(42.dp)
                             .clickable { navController.navigate("cart") }
                     ) {
                         Icon(
                             Icons.Filled.ShoppingCart,
                             contentDescription = "Carrito",
-                            tint = Color.White
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(22.dp)
+                                .align(Alignment.Center)
                         )
 
-                        // Badge del carrito
+                        // Badge del carrito - MEJORADO
                         Box(
                             modifier = Modifier
-                                .size(16.dp)
-                                .background(Color.Red, CircleShape)
+                                .size(18.dp) // Un poco más grande
+                                .background(
+                                    Color(0xFFFF5252), // Rojo más vibrante
+                                    CircleShape
+                                )
                                 .align(Alignment.TopEnd)
                         ) {
                             Text(
                                 text = "3",
                                 color = Color.White,
-                                fontSize = 8.sp,
+                                fontSize = 9.sp, // Un poco más grande
+                                fontWeight = FontWeight.Bold, // Negrita
                                 modifier = Modifier.align(Alignment.Center)
                             )
                         }
@@ -372,39 +428,131 @@ fun HomeBottomNavigationBar(
     navController: NavController,
     navItems: List<BottomNavItem>
 ) {
-    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
 
     NavigationBar(
         containerColor = Color.White
     ) {
         navItems.forEach { item ->
             NavigationBarItem(
-                selected = currentRoute == item.route,
+                selected = currentRoute == item.route ||
+                        (item.route == "home" && currentRoute?.startsWith("home/") == true),
                 onClick = {
-                    navController.navigate(item.route) {
-                        // Configuración para evitar múltiples instancias
-                        launchSingleTop = true
-                        // Restaurar estado si ya está en la pila
-                        restoreState = true
+                    // Navegación simple y directa
+                    if (item.route == "home") {
+                        navController.navigate("home/false") {
+                            launchSingleTop = true
+                            // Limpiar pila para evitar múltiples homes
+                            popUpTo("home") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(item.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 icon = {
+                    val isSelected = currentRoute == item.route ||
+                            (item.route == "home" && currentRoute?.startsWith("home/") == true)
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (currentRoute == item.route) Color(0xFF5649A5) else Color.Gray
+                        tint = if (isSelected) Color(0xFF5649A5) else Color.Gray
                     )
                 },
                 label = {
+                    val isSelected = currentRoute == item.route ||
+                            (item.route == "home" && currentRoute?.startsWith("home/") == true)
                     Text(
                         text = item.title,
-                        color = if (currentRoute == item.route) Color(0xFF5649A5) else Color.Gray
+                        color = if (isSelected) Color(0xFF5649A5) else Color.Gray
                     )
                 }
             )
         }
     }
 }
+// Componente reutilizable para badge de notificaciones
+@Composable
+fun NotificationBadge(count: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(40.dp)
+    ) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(40.dp),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Icon(
+                Icons.Outlined.Notifications,
+                contentDescription = "Notificaciones",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        if (count > 0) {
+            Box(
+                modifier = Modifier
+                    .size(16.dp)
+                    .background(Color.Red, CircleShape)
+                    .align(Alignment.TopEnd)
+            ) {
+                Text(
+                    text = if (count > 9) "9+" else count.toString(),
+                    color = Color.White,
+                    fontSize = 8.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
+    }
+}
+
+// Componente reutilizable para badge del carrito
+@Composable
+fun CartBadge(count: Int, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier.size(40.dp)
+    ) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(40.dp),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Icon(
+                Icons.Outlined.ShoppingCart,
+                contentDescription = "Carrito",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        if (count > 0) {
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .background(Color(0xFFFF9800), CircleShape)
+                    .align(Alignment.TopEnd)
+            ) {
+                Text(
+                    text = if (count > 9) "9+" else count.toString(),
+                    color = Color.White,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
+    }
+}
+
 
 
 

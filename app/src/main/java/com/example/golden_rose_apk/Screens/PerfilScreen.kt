@@ -2,12 +2,11 @@ package com.example.golden_rose_apk.Screens
 
 import android.app.Application
 import android.util.Log
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -15,12 +14,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -30,6 +28,7 @@ import com.example.golden_rose_apk.ViewModel.AuthViewModel
 import com.example.golden_rose_apk.ViewModel.AuthViewModelFactory
 import com.example.golden_rose_apk.ViewModel.SettingsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
+import com.example.golden_rose_apk.model.BottomNavItem
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,14 +44,47 @@ fun PerfilScreen(navController: NavController) {
     val currentTheme by settingsViewModel.appTheme.collectAsState()
     val pushNotificationsEnabled by settingsViewModel.pushNotificationsEnabled.collectAsState()
 
+    val navItems = listOf(
+        BottomNavItem("Inicio", Icons.Filled.Home, "home"),
+        BottomNavItem("Categorías", Icons.Filled.Category, "categories"),
+        BottomNavItem("Blogs", Icons.Filled.Article, "blogs"),
+        BottomNavItem("Perfil", Icons.Filled.Person, "perfil")
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Ajustes") },
+                title = {
+                    Text(
+                        text = "Mi Perfil",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
+                },
+                actions = {
+                    // Espacio invisible para balancear el navigationIcon
+                    Spacer(modifier = Modifier.width(48.dp))
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color(0xFF5649A5),
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
+            )
+        },
+        bottomBar = {
+            HomeBottomNavigationBar(
+                navController = navController,
+                navItems = navItems
             )
         }
     ) { paddingValues ->
@@ -63,14 +95,29 @@ fun PerfilScreen(navController: NavController) {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Avatar y nombre de usuario
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
-
+                // Avatar circular
+                Box(
+                    modifier = Modifier
+                        .size(60.dp)
+                        .background(Color(0xFF5649A5), androidx.compose.foundation.shape.CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = username.take(1).uppercase(),
+                        color = Color.White,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                }
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(username, style = MaterialTheme.typography.headlineSmall)
             }
+
+            // Botón Editar Perfil
             TextButton(
                 onClick = { navController.navigate("edit_profile") },
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp)
@@ -111,10 +158,15 @@ fun PerfilScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.weight(1f))
 
+            // Botón Cerrar Sesión
             Button(
                 onClick = {
                     Log.d("SettingsScreen", "Logout button clicked!")
                     authViewModel.logout()
+                    // Navegar al inicio después de cerrar sesión
+                    navController.navigate("welcome") {
+                        popUpTo(0) { inclusive = true }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp)

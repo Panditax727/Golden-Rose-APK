@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -18,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -26,23 +28,24 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import java.util.Calendar
 
-
-
-
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegisterScreen(navController: NavController) {
 
+    // Estados
     var user by remember { mutableStateOf("") }
-    var dd by remember { mutableStateOf("") }
-    var mm by remember { mutableStateOf("") }
-    var yyyy by remember { mutableStateOf("") }
+    var dateText by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var accepted by remember { mutableStateOf(false) }
+
+    // Estados de errores
+    var userError by remember { mutableStateOf("") }
+    var dateError by remember { mutableStateOf("") }
+    var phoneError by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf("") }
+    var termsError by remember { mutableStateOf("") }
 
     // Validaciones de contraseña
     val hasMinLength = password.length >= 8
@@ -50,6 +53,138 @@ fun RegisterScreen(navController: NavController) {
     val hasUpperCase = password.any { it.isUpperCase() }
     val hasLowerCase = password.any { it.isLowerCase() }
     val hasSpecialChar = password.any { !it.isLetterOrDigit() }
+    val hasNumber = password.any { it.isDigit() }
+
+    // Función para validar email
+    fun isValidEmail(email: String): Boolean {
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+        return emailRegex.matches(email)
+    }
+
+    // Función para validar teléfono chileno (opcional)
+    fun isValidChileanPhone(phone: String): Boolean {
+        // Si está vacío, es válido (porque es opcional)
+        if (phone.isBlank()) return true
+
+        // Eliminar todos los espacios
+        val cleanPhone = phone.replace("\\s".toRegex(), "")
+
+        // Validar que sean solo números
+        if (!cleanPhone.matches("\\d+".toRegex())) return false
+
+        // Validar longitud y formato chileno
+        return when {
+            // Número móvil: 9XXXXXXXX (9 dígitos, empieza con 9)
+            cleanPhone.startsWith("9") && cleanPhone.length == 9 -> true
+
+            // Número fijo: 2XXXXXXXX (8 dígitos, empieza con 2)
+            cleanPhone.startsWith("2") && cleanPhone.length == 8 -> true
+
+            // Otros casos no válidos
+            else -> false
+        }
+    }
+
+    // Función para formatear teléfono mientras se escribe
+    fun formatChileanPhone(input: String): String {
+        val digits = input.filter { it.isDigit() }
+
+        return when {
+            digits.isEmpty() -> ""
+            digits.startsWith("9") && digits.length <= 9 -> {
+                when (digits.length) {
+                    1 -> digits
+                    2 -> "${digits[0]} ${digits[1]}"
+                    in 3..5 -> "${digits[0]} ${digits.substring(1, digits.length)}"
+                    else -> "${digits[0]} ${digits.substring(1, 5)} ${digits.substring(5)}"
+                }
+            }
+            digits.startsWith("2") && digits.length <= 8 -> {
+                when (digits.length) {
+                    1 -> digits
+                    2 -> "${digits[0]} ${digits[1]}"
+                    in 3..5 -> "${digits[0]} ${digits.substring(1, digits.length)}"
+                    else -> "${digits[0]} ${digits.substring(1, 5)} ${digits.substring(5)}"
+                }
+            }
+            else -> digits.take(if (digits.startsWith("9")) 9 else 8)
+        }
+    }
+
+    // Función para validar nombre de usuario
+    fun isValidUsername(username: String): Boolean {
+        // Solo letras, números y guiones bajos, entre 3 y 20 caracteres
+        return username.matches("^[a-zA-Z0-9_]{3,20}\$".toRegex())
+    }
+
+    // Función para validar fecha (formato DD/MM/YYYY)
+    fun isValidDate(date: String): Boolean {
+        return date.matches("^\\d{2}/\\d{2}/\\d{4}\$".toRegex())
+    }
+
+    // Función para validar formulario completo
+    fun validateForm(): Boolean {
+        var isValid = true
+
+        // Limpiar errores previos
+        userError = ""
+        dateError = ""
+        phoneError = ""
+        emailError = ""
+        termsError = ""
+
+        // Validar usuario
+        if (user.isBlank()) {
+            userError = "El usuario es requerido"
+            isValid = false
+        } else if (!isValidUsername(user)) {
+            userError = "3-20 caracteres, solo letras, números y _"
+            isValid = false
+        }
+
+        // Validar fecha
+        if (dateText.isBlank()) {
+            dateError = "La fecha de nacimiento es requerida"
+            isValid = false
+        } else if (!isValidDate(dateText)) {
+            dateError = "Formato: DD/MM/AAAA"
+            isValid = false
+        }
+
+        // Validar teléfono (opcional, pero si se ingresa debe ser válido)
+        if (phone.isNotBlank() && !isValidChileanPhone(phone)) {
+            phoneError = "Formato chileno: 9 1234 5678 (móvil) o 2 1234 567 (fijo)"
+            isValid = false
+        }
+
+        // Validar email
+        if (email.isBlank()) {
+            emailError = "El correo es requerido"
+            isValid = false
+        } else if (!isValidEmail(email)) {
+            emailError = "Ingresa un correo válido"
+            isValid = false
+        }
+
+        // Validar contraseña
+        if (password.isBlank()) {
+            // El error se mostrará en los requisitos
+            isValid = false
+        } else {
+            if (!hasMinLength || !hasMaxLength || !hasUpperCase ||
+                !hasLowerCase || !hasNumber || !hasSpecialChar) {
+                isValid = false
+            }
+        }
+
+        // Validar términos
+        if (!accepted) {
+            termsError = "Debes aceptar los términos"
+            isValid = false
+        }
+
+        return isValid
+    }
 
     Scaffold(
         topBar = {
@@ -101,7 +236,7 @@ fun RegisterScreen(navController: NavController) {
                     .padding(bottom = 16.dp)
             )
 
-            // Campo: Usuario
+            // Campo: Usuario CON VALIDACIÓN
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.Start
@@ -115,20 +250,32 @@ fun RegisterScreen(navController: NavController) {
                 )
                 OutlinedTextField(
                     value = user,
-                    onValueChange = { user = it },
+                    onValueChange = {
+                        user = it
+                        if (userError.isNotEmpty()) userError = ""
+                    },
                     label = { Text("Ingresa tu nombre de usuario") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF5649A5),
-                        focusedLabelColor = Color(0xFF5649A5)
-                    )
+                        focusedLabelColor = Color(0xFF5649A5),
+                        errorBorderColor = Color.Red
+                    ),
+                    isError = userError.isNotEmpty(),
+                    supportingText = {
+                        if (userError.isNotEmpty()) {
+                            Text(text = userError, color = Color.Red)
+                        } else {
+                            Text(text = "3-20 caracteres, letras, números y _")
+                        }
+                    }
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo: Fecha de Nacimiento
+            // Campo: Fecha de Nacimiento CON VALIDACIÓN
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.Start
@@ -140,34 +287,71 @@ fun RegisterScreen(navController: NavController) {
                     color = Color.Black,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
-                SelectorFechas()
+                SelectorFechas(
+                    dateText = dateText,
+                    onDateSelected = { newDate ->
+                        dateText = newDate
+                        if (dateError.isNotEmpty()) dateError = ""
+                    },
+                    isError = dateError.isNotEmpty(),
+                    errorMessage = dateError
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Campo: Teléfono
+            // Campo: Teléfono OPCIONAL CON VALIDACIÓN
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.Start
             ) {
-                Text(
-                    text = "Teléfono",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(bottom = 4.dp)
-                )
+                ) {
+                    Text(
+                        text = "Teléfono",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.Black,
+                        modifier = Modifier.padding(end = 4.dp)
+                    )
+                    Text(
+                        text = "(opcional)",
+                        fontSize = 12.sp,
+                        color = Color.Gray
+                    )
+                }
                 OutlinedTextField(
                     value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Ingresa tu número de teléfono") },
+                    onValueChange = {
+                        // Aplicar formato mientras se escribe
+                        phone = formatChileanPhone(it)
+                        if (phoneError.isNotEmpty()) phoneError = ""
+                    },
+                    label = { Text("Teléfono (opcional)") },
+                    placeholder = { Text("9 1234 5678") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF5649A5),
-                        focusedLabelColor = Color(0xFF5649A5)
-                    )
+                        focusedLabelColor = Color(0xFF5649A5),
+                        errorBorderColor = Color.Red
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = phoneError.isNotEmpty(),
+                    supportingText = {
+                        if (phoneError.isNotEmpty()) {
+                            Text(text = phoneError, color = Color.Red)
+                        } else {
+                            Text(
+                                text = "Formato: 9 1234 5678",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        }
+                    }
                 )
             }
 
@@ -193,7 +377,7 @@ fun RegisterScreen(navController: NavController) {
                     .padding(bottom = 16.dp)
             )
 
-            // Campo: Correo
+            // Campo: Correo CON VALIDACIÓN
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.Start
@@ -207,15 +391,26 @@ fun RegisterScreen(navController: NavController) {
                 )
                 OutlinedTextField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = {
+                        email = it
+                        if (emailError.isNotEmpty()) emailError = ""
+                    },
                     label = { Text("ejemplo@correo.com") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = Color(0xFF5649A5),
-                        focusedLabelColor = Color(0xFF5649A5)
-                    )
+                        focusedLabelColor = Color(0xFF5649A5),
+                        errorBorderColor = Color.Red
+                    ),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = emailError.isNotEmpty(),
+                    supportingText = {
+                        if (emailError.isNotEmpty()) {
+                            Text(text = emailError, color = Color.Red)
+                        }
+                    }
                 )
             }
 
@@ -274,8 +469,18 @@ fun RegisterScreen(navController: NavController) {
                     )
 
                     RequerimientoContraseñaItem(
-                        text = "Al menos una mayúscula y una minúscula",
-                        isValid = hasUpperCase && hasLowerCase
+                        text = "Al menos una mayúscula (A-Z)",
+                        isValid = hasUpperCase
+                    )
+
+                    RequerimientoContraseñaItem(
+                        text = "Al menos una minúscula (a-z)",
+                        isValid = hasLowerCase
+                    )
+
+                    RequerimientoContraseñaItem(
+                        text = "Al menos un número (0-9)",
+                        isValid = hasNumber
                     )
 
                     RequerimientoContraseñaItem(
@@ -287,11 +492,13 @@ fun RegisterScreen(navController: NavController) {
                     if (password.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         IndicadorContraseñaFuerte(
-                            hasMinLength = hasMinLength,
-                            hasMaxLength = hasMaxLength,
-                            hasUpperCase = hasUpperCase,
-                            hasLowerCase = hasLowerCase,
-                            hasSpecialChar = hasSpecialChar
+                            requirements = listOf(
+                                hasMinLength && hasMaxLength,
+                                hasUpperCase,
+                                hasLowerCase,
+                                hasNumber,
+                                hasSpecialChar
+                            )
                         )
                     }
                 }
@@ -299,24 +506,53 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Checkbox Términos y Condiciones
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            // Checkbox Términos y Condiciones CON VALIDACIÓN
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.Start
             ) {
-                Checkbox(
-                    checked = accepted,
-                    onCheckedChange = { accepted = it },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = Color(0xFF5649A5),
-                        checkmarkColor = Color.White
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (termsError.isNotEmpty()) 4.dp else 0.dp)
+                ) {
+                    Checkbox(
+                        checked = accepted,
+                        onCheckedChange = {
+                            accepted = it
+                            if (termsError.isNotEmpty()) termsError = ""
+                        },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF5649A5),
+                            checkmarkColor = Color.White
+                        )
                     )
-                )
-                Text(
-                    text = "He leído y acepto los términos y condiciones",
-                    fontSize = 14.sp,
-                    modifier = Modifier.clickable { accepted = !accepted }
-                )
+                    Text(
+                        text = "He leído y acepto los ",
+                        fontSize = 14.sp,
+                        color = if (termsError.isNotEmpty()) Color.Red else Color.Black
+                    )
+                    Text(
+                        text = "términos y condiciones",
+                        color = Color(0xFF5649A5),
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable {
+                            // Navegar a términos y condiciones
+                            navController.navigate("terms")
+                        }
+                    )
+                }
+
+                // Mensaje de error de términos
+                if (termsError.isNotEmpty()) {
+                    Text(
+                        text = termsError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 48.dp)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -324,16 +560,9 @@ fun RegisterScreen(navController: NavController) {
             // Botón Crear Cuenta
             Button(
                 onClick = {
-                    if (accepted &&
-                        email.isNotBlank() &&
-                        password.isNotBlank() &&
-                        hasMinLength && hasMaxLength &&
-                        hasUpperCase && hasLowerCase &&
-                        hasSpecialChar &&
-                        user.isNotBlank() &&
-                        phone.isNotBlank()) {
-
-                        // Aquí iría la lógica de registro real
+                    if (validateForm()) {
+                        // Aquí iría la lógica de registro real con API
+                        // Por ahora solo navega
                         navController.navigate("home") {
                             popUpTo("register") { inclusive = true }
                         }
@@ -347,14 +576,7 @@ fun RegisterScreen(navController: NavController) {
                     disabledContainerColor = Color.Gray
                 ),
                 shape = RoundedCornerShape(12.dp),
-                enabled = accepted &&
-                        email.isNotBlank() &&
-                        password.isNotBlank() &&
-                        hasMinLength && hasMaxLength &&
-                        hasUpperCase && hasLowerCase &&
-                        hasSpecialChar &&
-                        user.isNotBlank() &&
-                        phone.isNotBlank()
+                enabled = validateForm()
             ) {
                 Text(
                     "Crear Cuenta",
@@ -380,16 +602,20 @@ fun RegisterScreen(navController: NavController) {
 }
 
 @Composable
-fun SelectorFechas() {
+fun SelectorFechas(
+    dateText: String,
+    onDateSelected: (String) -> Unit,
+    isError: Boolean = false,
+    errorMessage: String = ""
+) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
-
-    var dateText by remember { mutableStateOf("") }
 
     val datePicker = DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
-            dateText = "$dayOfMonth/${month + 1}/$year"
+            val formattedDate = String.format("%02d/%02d/%04d", dayOfMonth, month + 1, year)
+            onDateSelected(formattedDate)
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
@@ -403,14 +629,21 @@ fun SelectorFechas() {
         OutlinedTextField(
             value = dateText,
             onValueChange = {},
-            label = { Text("Selecciona tu fecha de nacimiento") },
+            label = { Text("DD/MM/AAAA") },
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFF5649A5),
-                focusedLabelColor = Color(0xFF5649A5)
-            )
+                focusedLabelColor = Color(0xFF5649A5),
+                errorBorderColor = Color.Red
+            ),
+            isError = isError,
+            supportingText = {
+                if (errorMessage.isNotEmpty()) {
+                    Text(text = errorMessage, color = Color.Red)
+                }
+            }
         )
 
         Button(
@@ -447,33 +680,23 @@ fun RequerimientoContraseñaItem(text: String, isValid: Boolean) {
     }
 }
 
-// Indicador visual de fortaleza de contraseña
 @Composable
-fun IndicadorContraseñaFuerte(
-    hasMinLength: Boolean,
-    hasMaxLength: Boolean,
-    hasUpperCase: Boolean,
-    hasLowerCase: Boolean,
-    hasSpecialChar: Boolean
-) {
-    val requirementsMet = listOf(
-        hasMinLength && hasMaxLength,
-        hasUpperCase && hasLowerCase,
-        hasSpecialChar
-    ).count { it }
+fun IndicadorContraseñaFuerte(requirements: List<Boolean>) {
+    val requirementsMet = requirements.count { it }
+    val totalRequirements = requirements.size
 
-    val strengthText = when (requirementsMet) {
-        3 -> "Fuerte ✓"
-        2 -> "Media"
-        1 -> "Débil"
-        else -> "Muy débil"
+    val strengthText = when {
+        requirementsMet == totalRequirements -> "Muy fuerte ✓"
+        requirementsMet >= totalRequirements * 0.7 -> "Fuerte"
+        requirementsMet >= totalRequirements * 0.4 -> "Media"
+        else -> "Débil"
     }
 
-    val strengthColor = when (requirementsMet) {
-        3 -> Color(0xFF4CAF50)  // Verde
-        2 -> Color(0xFFFF9800)  // Naranja
-        1 -> Color(0xFFF44336)  // Rojo
-        else -> Color.Gray
+    val strengthColor = when {
+        requirementsMet == totalRequirements -> Color(0xFF4CAF50)  // Verde
+        requirementsMet >= totalRequirements * 0.7 -> Color(0xFF8BC34A)  // Verde claro
+        requirementsMet >= totalRequirements * 0.4 -> Color(0xFFFF9800)  // Naranja
+        else -> Color(0xFFF44336)  // Rojo
     }
 
     Column(
@@ -485,13 +708,14 @@ fun IndicadorContraseñaFuerte(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            repeat(3) { index ->
+            repeat(totalRequirements) { index ->
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .height(4.dp)
                         .background(
-                            color = if (index < requirementsMet) strengthColor else Color.Gray.copy(alpha = 0.3f),
+                            color = if (index < requirementsMet) strengthColor
+                            else Color.Gray.copy(alpha = 0.3f),
                             shape = RoundedCornerShape(2.dp)
                         )
                 )
@@ -499,16 +723,25 @@ fun IndicadorContraseñaFuerte(
         }
 
         // Texto de fortaleza
-        Text(
-            text = "Fortaleza: $strengthText",
-            fontSize = 12.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = strengthColor
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Fortaleza:",
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
+            Text(
+                text = strengthText,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = strengthColor
+            )
+        }
     }
 }
-
-
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
