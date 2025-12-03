@@ -26,7 +26,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-
+import com.example.golden_rose_apk.ViewModel.AuthViewModel
+import com.example.golden_rose_apk.ViewModel.AuthViewModelFactory
+import com.example.golden_rose_apk.ViewModel.SettingsViewModel
+import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
 
 
 @OptIn(ExperimentalMaterial3Api::class)
