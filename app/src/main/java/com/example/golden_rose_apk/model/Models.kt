@@ -34,3 +34,17 @@ data class Product(
     val backgroundColor: androidx.compose.ui.graphics.Color
 )
 
+data class CheckoutItem(
+    val name: String,
+    val quantity: Int,
+    val price: Double
+)
+
+data class BlogPost(
+    val id: Int,
+    val title: String,
+    val date: String,
+    val preview: String,
+    val content: String
+)
+
