@@ -102,28 +102,31 @@ fun HomeScreen(navController: NavController) {
                                 tint = Color.White
                             )
                         },
+                        
                         singleLine = true
                     )
 
-                    // Botón de campana
+
+                    // Botón de notificaciones (campana)
                     IconButton(
                         onClick = { /* Abrir filtros */ },
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
-                            Icons.Filled.DoorBack,
+                            Icons.Filled.Notifications,
                             contentDescription = "Campanita",
                             tint = Color.White
                         )
                     }
 
-                    // Botón de Corazon
+
+                    // Botón de corazón (favoritos)
                     IconButton(
                         onClick = { /* Abrir filtros */ },
                         modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
-                            Icons.Filled.HeartBroken,
+                            Icons.Filled.Favorite,
                             contentDescription = "Campanita",
                             tint = Color.White
                         )
