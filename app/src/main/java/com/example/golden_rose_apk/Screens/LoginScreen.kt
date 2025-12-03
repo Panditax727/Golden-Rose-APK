@@ -1,5 +1,6 @@
 package com.example.golden_rose_apk.Screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.runtime.*
 import androidx.navigation.NavController
 import androidx.compose.foundation.background
@@ -20,7 +21,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.*
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.Composable
+import com.example.golden_rose_apk.R
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,7 +46,14 @@ fun LoginScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Iniciar sesión") },
+                title = {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
@@ -54,10 +72,28 @@ fun LoginScreen(navController: NavController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Text("Inicio Sesión", fontSize = 22.sp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, bottom = 10.dp),
+                contentAlignment = Alignment.Center
+            ){
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo de Golden Rose",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .size(200.dp)
+                        .clip(RoundedCornerShape(16.dp)),
+                    contentScale = ContentScale.Fit,
+                )
 
-            Spacer(Modifier.height(50.dp))
+            }
 
+            Spacer(Modifier.height(10.dp))
+
+
+            Text("Correo ", fontSize = 15.sp)
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -65,8 +101,9 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(Modifier.height(16.dp))
+            Spacer(Modifier.height(30.dp))
 
+            Text("Contraseña", fontSize = 15.sp)
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -79,8 +116,9 @@ fun LoginScreen(navController: NavController) {
 
             Text(
                 "Recuperar contraseña",
+                color = Color(0xFF9E9E9E),
                 fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.End)
+                modifier = Modifier.align(Alignment.CenterHorizontally)
             )
 
             Spacer(Modifier.height(20.dp))
