@@ -31,8 +31,14 @@ import com.example.golden_rose_apk.model.Product
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController) {
-
+fun HomeScreen(navController: NavController, isGuest: Boolean) {
+    if (isGuest) {
+        Text("Bienvenido invitado")
+        // Mostrar contenido limitado
+    } else {
+        Text("Bienvenido, usuario")
+        // Mostrar todo el contenido
+    }
 
     var searchText by remember { mutableStateOf("") }
 
@@ -121,15 +127,17 @@ fun HomeScreen(navController: NavController) {
                     }
 
                     // Botón de corazón (favoritos)
-                    IconButton(
-                        onClick = { navController.navigate("favorites") },
-                        modifier = Modifier.size(40.dp)
-                    ) {
-                        Icon(
-                            Icons.Filled.Favorite,
-                            contentDescription = "Favoritos",
-                            tint = Color.White
-                        )
+                    if (!isGuest) {
+                        IconButton(
+                            onClick = { navController.navigate("favorites") },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Filled.Favorite,
+                                contentDescription = "Favoritos",
+                                tint = Color.White
+                            )
+                        }
                     }
 
                     // Botón de carrito
@@ -404,5 +412,5 @@ fun HomeBottomNavigationBar(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen(navController = rememberNavController())
+    HomeScreen(navController = rememberNavController(), isGuest = true)
 }

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.golden_rose_apk.Screens.HomeScreen
 import com.example.golden_rose_apk.Screens.LoginScreen
 import com.example.golden_rose_apk.Screens.RegisterScreen
 import com.example.golden_rose_apk.Screens.WelcomeScreen
@@ -19,7 +20,10 @@ class MainActivity : ComponentActivity() {
                 composable("welcome") { WelcomeScreen(navController) }
                 composable("login") { LoginScreen(navController) }
                 composable("register") { RegisterScreen(navController) }
-                composable("home") { WelcomeScreen(navController) }
+                composable("home/{isGuest}") { backStackEntry ->
+                    val isGuest = backStackEntry.arguments?.getString("isGuest")?.toBoolean() ?: false
+                    HomeScreen(navController, isGuest)
+                }
             }
         }
     }
