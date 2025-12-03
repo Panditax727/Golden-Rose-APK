@@ -133,7 +133,7 @@ fun WelcomeScreen(navController: NavController? = null) {
             text = "Ingresar como Invitado",
             fontSize = 13.sp,
             modifier = Modifier.clickable {
-                navController?.navigate("guest")
+                navController?.navigate("home")
             }
         )
 
