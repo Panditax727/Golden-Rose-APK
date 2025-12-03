@@ -63,13 +63,16 @@ fun HomeScreen(navController: NavController) {
     Scaffold(
         topBar = {
             // TOP BAR CON MÚLTIPLES BOTONES
+
             Box(
+
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
                     .background(Color(0xFF5649A5))
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
+
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,

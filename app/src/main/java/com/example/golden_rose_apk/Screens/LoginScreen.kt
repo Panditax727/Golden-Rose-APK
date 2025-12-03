@@ -3,13 +3,17 @@ package com.example.golden_rose_apk.Screens
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +35,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,17 +48,61 @@ import com.example.golden_rose_apk.config.api.ApiClient
 import com.example.golden_rose_apk.model.LoginRequest
 import com.example.golden_rose_apk.service.AuthService
 import kotlinx.coroutines.launch
+import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(navController: NavController) {
 
+    // Estados
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var accepted by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
+    var passwordVisible by remember { mutableStateOf(false) }
+
+    // Estados de errores
+    var emailError by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf("") }
+    var termsError by remember { mutableStateOf("") }
+
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    // Función para validar email
+    fun isValidEmail(email: String): Boolean {
+        val emailRegex = Pattern.compile(
+            "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$"
+        )
+        return emailRegex.matcher(email).matches()
+    }
+
+    // Función para validar formulario completo
+    fun validateForm(): Boolean {
+        var isValid = true
+
+        // Validar email
+        emailError = when {
+            email.isBlank() -> "El correo es requerido"
+            !isValidEmail(email) -> "Ingresa un correo válido"
+            else -> ""
+        }
+        if (emailError.isNotEmpty()) isValid = false
+
+        // Validar contraseña
+        passwordError = when {
+            password.isBlank() -> "La contraseña es requerida"
+            password.length < 6 -> "Mínimo 6 caracteres"
+            else -> ""
+        }
+        if (passwordError.isNotEmpty()) isValid = false
+
+        // Validar términos
+        termsError = if (!accepted) "Debes aceptar los términos" else ""
+        if (termsError.isNotEmpty()) isValid = false
+
+        return isValid
+    }
 
     Scaffold(
         topBar = {
@@ -102,66 +152,166 @@ fun LoginScreen(navController: NavController) {
 
             Spacer(Modifier.height(10.dp))
 
-            Text("Correo ", fontSize = 15.sp)
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo") },
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Correo",
+                    fontSize = 15.sp,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        // Limpiar error mientras el usuario escribe
+                        if (emailError.isNotEmpty()) {
+                            emailError = ""
+                        }
+                    },
+                    label = { Text("Correo electrónico") },
+                    modifier = Modifier.fillMaxWidth(),
+                    isError = emailError.isNotEmpty(),
+                    supportingText = {
+                        if (emailError.isNotEmpty()) {
+                            Text(text = emailError, color = Color.Red)
+                        }
+                    }
+                )
+            }
 
             Spacer(Modifier.height(30.dp))
 
-            Text("Contraseña", fontSize = 15.sp)
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contraseña") },
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
-            )
+            // Campo de contraseña con validación y toggle de visibilidad
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text("Contraseña", fontSize = 15.sp, modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        // Limpiar error mientras el usuario escribe
+                        if (passwordError.isNotEmpty()) {
+                            passwordError = ""
+                        }
+                    },
+                    label = { Text("Contraseña") },
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None
+                    else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Filled.Visibility
+                                else Icons.Filled.VisibilityOff,
+                                contentDescription = if (passwordVisible) "Ocultar contraseña"
+                                else "Mostrar contraseña"
+                            )
+                        }
+                    },
+                    isError = passwordError.isNotEmpty(),
+                    supportingText = {
+                        if (passwordError.isNotEmpty()) {
+                            Text(text = passwordError, color = Color.Red)
+                        }
+                    }
+                )
+            }
+
 
             Spacer(Modifier.height(10.dp))
 
             Text(
                 "Recuperar contraseña",
-                color = Color(0xFF9E9E9E),
+                color = Color(0xFF5649A5),
                 fontSize = 12.sp,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .clickable {
+                        navController.navigate("recover_password")
+                    }
             )
 
             Spacer(Modifier.height(20.dp))
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Checkbox(
-                    checked = accepted,
-                    onCheckedChange = { accepted = it }
-                )
-                Text("He leído los términos y condiciones")
+            // Términos y condiciones con validación
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = if (termsError.isNotEmpty()) 4.dp else 0.dp)
+                ) {
+                    Checkbox(
+                        checked = accepted,
+                        onCheckedChange = {
+                            accepted = it
+                            if (termsError.isNotEmpty()) {
+                                termsError = ""
+                            }
+                        }
+                    )
+                    Text(
+                        text = "He leído y acepto los ",
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        text = "términos y condiciones",
+                        color = Color(0xFF5649A5),
+                        fontSize = 14.sp,
+                        modifier = Modifier.clickable {
+                            // Navegar a términos y condiciones
+                            navController.navigate("terms")
+                        }
+                    )
+                }
+
+                // Error de términos
+                if (termsError.isNotEmpty()) {
+                    Text(
+                        text = termsError,
+                        color = Color.Red,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(start = 48.dp)
+                    )
+                }
             }
 
             Spacer(Modifier.height(25.dp))
 
             Button(
                 onClick = {
-                    if (accepted && email.isNotBlank() && password.isNotBlank() && !loading) {
+                    // Validar formulario antes de proceder
+                    if (validateForm() && !loading) {
                         loading = true
                         scope.launch {
                             try {
                                 val service = ApiClient.getAuthClient(context).create(AuthService::class.java)
+
+                                // IMPORTANTE: Verifica si tu LoginRequest usa 'email' o 'username'
+                                // Si tu API espera 'username', usa: LoginRequest(username = email, password = password)
                                 val resp = service.login(LoginRequest(email = email, password = password))
+
                                 if (resp.isSuccessful) {
-                                    resp.body()?.token?.let {
-                                        SessionManager(context).saveToken(it)
+                                    resp.body()?.token?.let { token ->
+                                        SessionManager(context).saveToken(token)
                                         navController.navigate("home") {
-                                            popUpTo("welcome") { inclusive = true }
+                                            popUpTo("login") { inclusive = true }
                                         }
-                                    } ?: Toast.makeText(context, "Respuesta sin token", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+                                    } ?: run {
+                                        Toast.makeText(context, "Error: Token no recibido", Toast.LENGTH_LONG).show()
+                                    }
                                 } else {
-                                    Toast.makeText(context, "Login fallido: ${resp.code()}", Toast.LENGTH_LONG).show()
+                                    when (resp.code()) {
+                                        400 -> Toast.makeText(context, "Credenciales inválidas", Toast.LENGTH_LONG).show()
+                                        401 -> Toast.makeText(context, "Usuario no autorizado", Toast.LENGTH_LONG).show()
+                                        404 -> Toast.makeText(context, "Usuario no encontrado", Toast.LENGTH_LONG).show()
+                                        500 -> Toast.makeText(context, "Error del servidor", Toast.LENGTH_LONG).show()
+                                        else -> Toast.makeText(context, "Error: ${resp.code()}", Toast.LENGTH_LONG).show()
+                                    }
                                 }
                             } catch (e: Exception) {
-                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_LONG).show()
                             } finally {
                                 loading = false
                             }
@@ -171,10 +321,22 @@ fun LoginScreen(navController: NavController) {
                 modifier = Modifier
                     .width(200.dp)
                     .height(45.dp),
-                colors = ButtonDefaults.buttonColors(Color(0xFF5649A5)),
-                shape = RoundedCornerShape(50)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF5649A5),
+                    disabledContainerColor = Color(0xFF9E9E9E)
+                ),
+                shape = RoundedCornerShape(50),
+                enabled = !loading
             ) {
-                Text(if (loading) "Cargando..." else "Iniciar Sesión", color = Color.White)
+                if (loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Iniciar Sesión", color = Color.White)
+                }
             }
         }
     }
