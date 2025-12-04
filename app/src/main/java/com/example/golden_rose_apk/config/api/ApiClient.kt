@@ -1,6 +1,5 @@
 package com.example.golden_rose_apk.config.api
 
-import android.R.attr.level
 import android.content.Context
 import com.example.golden_rose_apk.config.AuthInterceptor
 import com.example.golden_rose_apk.config.Constants
@@ -11,7 +10,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
-
     private var retrofitAuth: Retrofit? = null
     private var retrofitProductos: Retrofit? = null
 

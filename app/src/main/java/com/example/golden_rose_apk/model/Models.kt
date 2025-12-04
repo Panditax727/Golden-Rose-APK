@@ -51,3 +51,10 @@ data class BlogPost(
     val comments: Int = 0
 )
 
+data class Usuarios(
+    val username: String,
+    val email: String,
+    val telefono: String,
+    val role: String
+)
+
