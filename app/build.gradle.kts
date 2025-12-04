@@ -44,7 +44,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.11"  // Agregar esto
+        kotlinCompilerExtensionVersion = "1.5.14"
     }
     packaging {
         resources {
@@ -74,19 +74,21 @@ dependencies {
     // 3. Material Icons (para los iconos)
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
 
-    // 4. Si quieres usar Retrofit para API (OPCIONAL - elimina si no lo necesitas)
+    // 4. Si quieres usar Retrofit para API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // 5. Coil para cargar imágenes (si vas a usar imágenes de internet)
+    // 5. Coil para cargar imágenes
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Firebase
-    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
-    implementation("com.google.firebase:firebase-messaging:23.4.1")
-    implementation("com.google.firebase:firebase-analytics")
+    // Importar la plataforma BOM de Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+
+    // Ahora puedes usar las dependencias sin versión
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-analytics-ktx")
 
 
     // ELIMINA estas líneas duplicadas (ya están en el BOM):
