@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.golden_rose_apk" />
+                  <option name="mobileSdkAppId" value="1:760552768674:android:4f0ca2e9f210b9558643fb" />
+                  <option name="projectId" value="golden-rose-apk" />
+                  <option name="projectNumber" value="760552768674" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
