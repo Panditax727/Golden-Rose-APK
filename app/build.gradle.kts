@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    // Plugin necesario para Firebase
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -79,6 +82,12 @@ dependencies {
 
     // 5. Coil para cargar imágenes (si vas a usar imágenes de internet)
     implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:34.6.0"))
+    implementation("com.google.firebase:firebase-messaging:23.4.1")
+    implementation("com.google.firebase:firebase-analytics")
+
 
     // ELIMINA estas líneas duplicadas (ya están en el BOM):
     // implementation("androidx.compose.material3:material3:1.2.1")
