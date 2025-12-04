@@ -45,15 +45,6 @@ fun BlogScreen(navController: NavController, viewModel: BlogViewModel = viewMode
                         textAlign = TextAlign.Center
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
-                    }
-                },
                 actions = {
                     // Espacio invisible para balancear el navigationIcon
                     Spacer(modifier = Modifier.width(48.dp))

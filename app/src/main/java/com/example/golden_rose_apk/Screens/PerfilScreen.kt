@@ -61,15 +61,6 @@ fun PerfilScreen(navController: NavController) {
                         textAlign = TextAlign.Center
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
-                    }
-                },
                 actions = {
                     // Espacio invisible para balancear el navigationIcon
                     Spacer(modifier = Modifier.width(48.dp))
@@ -212,19 +203,7 @@ fun SettingSwitchItem(
     }
 }
 
-@Composable
-fun SettingTextItem(text: String, icon: ImageVector) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp, horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge)
-    }
-}
+
 
 @Composable
 fun ThemeOptionRow(text: String, selected: Boolean, onClick: () -> Unit) {
