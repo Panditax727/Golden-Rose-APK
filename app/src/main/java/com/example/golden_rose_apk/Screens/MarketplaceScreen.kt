@@ -36,13 +36,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.golden_rose_apk.ViewModel.CartViewModel
 import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
 import com.example.golden_rose_apk.model.Skin
 import com.example.golden_rose_apk.ui.components.GoldenRoseScreen
 import kotlinx.coroutines.launch
 
 @Composable
-fun MarketplaceScreen (navController: NavController, viewModel: MarketplaceViewModel) {
+fun MarketplaceScreen (
+    navController: NavController,
+    viewModel: MarketplaceViewModel,
+    cartViewModel: CartViewModel
+) {
     val allSkins by viewModel.skins.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -92,7 +97,9 @@ fun MarketplaceScreen (navController: NavController, viewModel: MarketplaceViewM
             ) {
                 items(filteredSkins) { skin ->
                     SkinCard(skin) {
-                        navController.navigate("productDetail/${skin.id}")
+                        // CORREGIDO: Usa "product_detail" con guión bajo
+                        println("📍 Navegando a product_detail/${skin.id}")
+                        navController.navigate("product_detail/${skin.id}")
                     }
                 }
 
@@ -114,7 +121,10 @@ fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onSkinClick() },
+            .clickable {
+                println("🖱️ Click en SkinCard: ID=${skin.id}, Name=${skin.name}")
+                onSkinClick()
+                       },
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(

@@ -33,9 +33,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
+import com.example.golden_rose_apk.ViewModel.CartViewModel
 import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
 import com.example.golden_rose_apk.config.Constants
 import com.example.golden_rose_apk.model.Skin
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,7 +45,8 @@ import com.example.golden_rose_apk.model.Skin
 fun HomeScreen(
     navController: NavController,
     isGuest: Boolean,
-    marketplaceViewModel: MarketplaceViewModel
+    marketplaceViewModel: MarketplaceViewModel,
+    cartViewModel: CartViewModel
 ) {
     val greeting = if (isGuest) {
         "Bienvenido Invitado a Golden Rose"
@@ -58,6 +61,10 @@ fun HomeScreen(
 
     var searchText by remember { mutableStateOf("") }
 
+    // Snackbar Mostrar mensaje
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
     // Categorías principales
     val categories = listOf(
         Category("Meele", Color(0xFF5649A5)),
@@ -66,13 +73,6 @@ fun HomeScreen(
         Category("Phantom", Color(0xFFFF9800))
     )
 
-    // Productos más vendidos
-    val topProducts = listOf(
-        Product("Vandal Reaver", "$199.99", Color(0xFFE3F2FD)),
-        Product("Knife Champions", "$159.99", Color(0xFFF3E5F5)),
-        Product("Marshal Forajida", "$89.99", Color(0xFFE8F5E8)),
-        Product("Operator Chaocaos", "$299.99", Color(0xFFFFF3E0))
-    )
 
     // Barra de navegación inferior
     val navItems = listOf(
@@ -84,6 +84,7 @@ fun HomeScreen(
 
 
     Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             // TOP BAR CON MÚLTIPLES BOTONES - VERSIÓN MEJORADA
             Box(
@@ -296,7 +297,22 @@ fun HomeScreen(
                 modifier = Modifier.height(400.dp)
             ) {
                 items(skins) { skin ->
-                    ProductCardFromSkin(skin, navController)
+                    ProductCardFromSkin(
+                        skin = skin,
+                        navController = navController,
+                        cartViewModel = cartViewModel,
+                        onAddToCart = {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "✅ ${skin.name} agregada al carrito",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        },
+                        onClick = {
+                            navController.navigate("productDetail/${skin.id}")
+                        }
+                    )
                 }
             }
 
@@ -408,7 +424,7 @@ fun ProductCard(product: Product, navController: NavController) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { /* Agregar al carrito */ },
+                onClick = { navController.navigate("cart") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF5649A5)
@@ -512,48 +528,16 @@ fun NotificationBadge(count: Int, onClick: () -> Unit) {
     }
 }
 
-// Componente reutilizable para badge del carrito
-@Composable
-fun CartBadge(count: Int, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier.size(40.dp)
-    ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier.size(40.dp),
-            colors = IconButtonDefaults.iconButtonColors(
-                containerColor = Color.Transparent
-            )
-        ) {
-            Icon(
-                Icons.Outlined.ShoppingCart,
-                contentDescription = "Carrito",
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-
-        if (count > 0) {
-            Box(
-                modifier = Modifier
-                    .size(18.dp)
-                    .background(Color(0xFFFF9800), CircleShape)
-                    .align(Alignment.TopEnd)
-            ) {
-                Text(
-                    text = if (count > 9) "9+" else count.toString(),
-                    color = Color.White,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
-                )
-            }
-        }
-    }
-}
 
 @Composable
-fun ProductCardFromSkin(skin: Skin, navController: NavController) {
+fun ProductCardFromSkin(
+    skin: Skin,
+    navController: NavController,
+    cartViewModel: CartViewModel,
+    onAddToCart: () -> Unit,
+    onClick: () -> Unit
+) {
+
     val context = LocalContext.current
 
     Card(
@@ -645,7 +629,8 @@ fun ProductCardFromSkin(skin: Skin, navController: NavController) {
             Button(
                 onClick = {
                     println("➕ Agregando al carrito: ${skin.name}")
-                    // Aquí puedes agregar lógica para agregar al carrito
+                    cartViewModel.addToCart(skin.id.toString())
+                    onAddToCart()
                 },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
@@ -658,6 +643,44 @@ fun ProductCardFromSkin(skin: Skin, navController: NavController) {
         }
     }
 }
+
+@Composable
+fun CartBadge(count: Int, onClick: () -> Unit) {
+    Box(modifier = Modifier.size(40.dp)) {
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier.size(40.dp),
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Icon(
+                Icons.Outlined.ShoppingCart,
+                contentDescription = "Carrito",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        if (count > 0) {
+            Box(
+                modifier = Modifier
+                    .size(18.dp)
+                    .background(Color(0xFFFF9800), CircleShape)
+                    .align(Alignment.TopEnd)
+            ) {
+                Text(
+                    text = if (count > 9) "9+" else count.toString(),
+                    color = Color.White,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
+        }
+    }
+}
+
 
 
 

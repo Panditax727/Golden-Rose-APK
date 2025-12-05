@@ -41,8 +41,15 @@ class CartViewModel() : ViewModel(){
 
     fun addToCart(productId: String) {
         viewModelScope.launch {
-            RetrofitInstance.cartApi.agregar(AddCartRequest(productId, 1))
-            cargarCarrito()
+            try {
+                println("🛒 Intentando agregar producto ID: $productId")
+                RetrofitInstance.cartApi.agregar(AddCartRequest(productId, 1))
+                cargarCarrito()
+                println("✅ Producto agregado exitosamente")
+            } catch (e: Exception) {
+                println("❌ Error al agregar al carrito: ${e.message}")
+                e.printStackTrace()
+            }
         }
     }
 

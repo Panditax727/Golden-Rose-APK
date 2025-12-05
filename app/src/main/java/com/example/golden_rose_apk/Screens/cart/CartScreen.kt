@@ -40,10 +40,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
 import com.example.golden_rose_apk.ViewModel.CartViewModel
 import com.example.golden_rose_apk.model.BottomNavItem
@@ -141,7 +139,7 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                 }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
-                    onClick = { /* Navegar a checkout */ },
+                    onClick = { navController.navigate("checkout") },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = cartItems.isNotEmpty()
                 ) {
@@ -198,12 +196,6 @@ fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
             }
         }
     }
-}
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun CartScreenPreview() {
-    val dummyCartViewModel = CartViewModel()
-    CartScreen(navController = rememberNavController(), cartViewModel = dummyCartViewModel)
 }
 
 

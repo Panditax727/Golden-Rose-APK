@@ -32,7 +32,6 @@ import com.example.golden_rose_apk.Screens.cart.ReceiptScreen
 import com.example.golden_rose_apk.Screens.favorites.FavoritesScreen
 import com.example.golden_rose_apk.Screens.products.ProductDetailScreen
 import com.example.golden_rose_apk.Screens.search.SearchScreen
-import com.example.golden_rose_apk.Screens.settings.SettingsScreen
 import com.example.golden_rose_apk.ViewModel.AuthViewModel
 import com.example.golden_rose_apk.ViewModel.BlogViewModel
 import com.example.golden_rose_apk.ViewModel.CartViewModel
@@ -84,13 +83,25 @@ class MainActivity : ComponentActivity() {
                     // Pantalla principal con parámetro opcional
                     composable("home") {
                         val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        HomeScreen(navController, isGuest = false, marketplaceViewModel = marketplaceViewModel)
+                        val cartViewModel: CartViewModel = viewModel()
+                        HomeScreen(
+                            navController = navController,
+                            isGuest = false,
+                            marketplaceViewModel = marketplaceViewModel,
+                            cartViewModel = cartViewModel
+                        )
                     }
                     // Pantalla principal como Invitado
                     composable("home/{isGuest}") { backStackEntry ->
                         val isGuest = backStackEntry.arguments?.getString("isGuest")?.toBoolean() ?: false
                         val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        HomeScreen(navController, isGuest, marketplaceViewModel = marketplaceViewModel)
+                        val cartViewModel: CartViewModel = viewModel()
+                        HomeScreen(
+                            navController = navController,
+                            isGuest = isGuest,
+                            marketplaceViewModel = marketplaceViewModel,
+                            cartViewModel = cartViewModel
+                        )
                     }
                     // TopBar
 
@@ -113,7 +124,13 @@ class MainActivity : ComponentActivity() {
                     // ========== PANTALLAS DE PRODUCTOS ==========
                     composable("marketplace") {
                         val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        MarketplaceScreen(navController, marketplaceViewModel)
+                        val cartViewModel: CartViewModel = viewModel()   // <-- AGREGAR ESTO
+
+                        MarketplaceScreen(
+                            navController = navController,
+                            viewModel = marketplaceViewModel,
+                            cartViewModel = cartViewModel               // <-- PASARLO
+                        )
                     }
 
                     // Pantalla de detalle de producto

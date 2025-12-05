@@ -18,7 +18,7 @@ class MarketplaceViewModel(application: Application) : AndroidViewModel(applicat
 
     // Lista de skins/productos
     private val _skins = MutableStateFlow<List<Skin>>(emptyList())
-    val skins: StateFlow<List<Skin>> get() = _skins
+    val skins: StateFlow<List<Skin>> = _skins
 
     // Query de búsqueda
     private val _searchQuery = MutableStateFlow("")
