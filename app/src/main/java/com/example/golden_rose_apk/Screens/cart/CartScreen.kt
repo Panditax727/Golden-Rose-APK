@@ -109,7 +109,7 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Tu carrito está vacío")
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { /* Navegar al marketplace */ }) {
+                        Button(onClick = { navController.navigate("categories") }) {
                             Text("Ir al Mercado")
                         }
                     }
@@ -169,7 +169,7 @@ fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.productoId, item.cantidad - 1) },
+                    onClick = { viewModel.updateQuantity(item.productoId.toString(), item.cantidad - 1)  },
                     enabled = item.cantidad > 1,
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
@@ -180,14 +180,14 @@ fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
                 Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.productoId, item.cantidad + 1) },
+                    onClick = { viewModel.updateQuantity(item.productoId.toString(), item.cantidad + 1)  },
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) { Text("+") }
 
                 Spacer(modifier = Modifier.width(16.dp))
                 IconButton(
-                    onClick = { viewModel.removeFromCart(item.productoId) },
+                    onClick = { viewModel.removeFromCart(item.productoId.toString())  },
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(

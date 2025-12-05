@@ -39,14 +39,10 @@ class CartViewModel() : ViewModel(){
         cargarCarrito()
     }
 
-    fun addToCart(productId: Long) {
+    fun addToCart(productId: String) {
         viewModelScope.launch {
-            try {
-                RetrofitInstance.cartApi.agregar(AddCartRequest(productId, 1)) // cantidad 1 por defecto
-                cargarCarrito()
-            } catch (e: Exception) {
-                println("Error al agregar al carrito: ${e.message}")
-            }
+            RetrofitInstance.cartApi.agregar(AddCartRequest(productId, 1))
+            cargarCarrito()
         }
     }
 
@@ -62,13 +58,16 @@ class CartViewModel() : ViewModel(){
         }
     }
 
-    fun updateQuantity(productoId: Long, nuevaCantidad: Int) {
+    fun updateQuantity(productoId: String, nuevaCantidad: Int) {
         viewModelScope.launch {
             try {
                 if (nuevaCantidad < 1) return@launch
-                val item = _cartItems.value.find { it.productoId == productoId } ?: return@launch
+
+                // Convertir String a Long para comparar
+                val productoIdLong = productoId.toLongOrNull() ?: return@launch
+
+                val item = _cartItems.value.find { it.productoId == productoIdLong } ?: return@launch
                 RetrofitInstance.cartApi.agregar(AddCartRequest(productoId, nuevaCantidad))
-                // Recargar carrito actualizado
                 cargarCarrito()
             } catch (e: Exception) {
                 println("Error al actualizar cantidad: ${e.message}")
@@ -76,7 +75,7 @@ class CartViewModel() : ViewModel(){
         }
     }
 
-    fun removeFromCart(productoId: Long) {
+    fun removeFromCart(productoId: String) {
         viewModelScope.launch {
             try {
                 // Suponiendo que tu API tiene un endpoint DELETE, si no solo actualizar con cantidad 0

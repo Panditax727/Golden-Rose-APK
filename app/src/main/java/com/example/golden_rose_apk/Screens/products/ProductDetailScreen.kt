@@ -46,7 +46,7 @@ fun ProductDetailScreen(
     marketplaceViewModel: MarketplaceViewModel,
     cartViewModel: CartViewModel,
 ) {
-    val skin = marketplaceViewModel.getSkinById(productId.toIntOrNull() ?: -1)
+    val skin = marketplaceViewModel.getSkinByIdString(productId)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 

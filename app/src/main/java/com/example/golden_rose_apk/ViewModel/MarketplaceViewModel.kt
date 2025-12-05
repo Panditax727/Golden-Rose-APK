@@ -60,9 +60,13 @@ class MarketplaceViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    // Obtener un Skin por id
+
+    fun getSkinByIdString(idString: String): Skin? {
+        return _skins.value.find { it.id == idString }
+    }
+
     fun getSkinById(id: Int): Skin? {
-        return _skins.value.find { it.id.toInt() == id }
+        return _skins.value.find { it.id.toIntOrNull() == id }
     }
 }
 

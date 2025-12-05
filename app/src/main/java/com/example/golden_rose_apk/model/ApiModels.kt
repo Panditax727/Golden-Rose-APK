@@ -30,7 +30,7 @@ data class CartItemPayload(
 )
 
 data class AddCartRequest(
-    @SerializedName("productoId") val productoId: Long,
+    @SerializedName("productoId") val productoId: String,
     @SerializedName("cantidad") val cantidad: Int
 )
 
