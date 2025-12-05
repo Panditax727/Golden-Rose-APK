@@ -32,21 +32,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
 import com.example.golden_rose_apk.model.Skin
 import com.example.golden_rose_apk.ui.components.GoldenRoseScreen
-import com.example.golden_rose_apk.ui.components.PillBadge
-import com.example.golden_rose_apk.utils.getTierInfoFromUrl
 import kotlinx.coroutines.launch
 
 @Composable
-fun MarketplaceScreen(navController: NavController, viewModel: MarketplaceViewModel) {
+fun MarketplaceScreen (navController: NavController, viewModel: MarketplaceViewModel) {
     val allSkins by viewModel.skins.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -67,47 +63,46 @@ fun MarketplaceScreen(navController: NavController, viewModel: MarketplaceViewMo
         subtitle = "Claves de skins listas para usar",
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) {
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = viewModel::onSearchQueryChange,
-            label = { Text("Buscar por nombre") },
-            leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            singleLine = true
-        )
-
-        if (isLoading && allSkins.isEmpty()) {
-            Box(
+        Column(modifier = Modifier.padding(16.dp)) {
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = viewModel::onSearchQueryChange,
+                label = { Text("Buscar por nombre") },
+                leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 32.dp),
-                contentAlignment = Alignment.Center
+                    .padding(bottom = 8.dp),
+                singleLine = true
+            )
+
+            if (isLoading && allSkins.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                CircularProgressIndicator()
-            }
-        }
+                items(filteredSkins) { skin ->
+                    SkinCard(skin) {
+                        navController.navigate("productDetail/${skin.id}")
+                    }
+                }
 
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            items(filteredSkins) { skin ->
-                SkinCard(
-                    skin = skin,
-                    onSkinClick = { navController.navigate("productDetail/${skin.id}") }
-                )
-            }
-
-            if (filteredSkins.isEmpty() && searchQuery.isNotEmpty() && !isLoading) {
-                item {
-                    Text(
-                        "No encontramos resultados para \"$searchQuery\"",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp)
-                    )
+                if (filteredSkins.isEmpty() && searchQuery.isNotEmpty() && !isLoading) {
+                    item {
+                        Text(
+                            "No encontramos resultados para \"$searchQuery\"",
+                            modifier = Modifier.padding(vertical = 16.dp)
+                        )
+                    }
                 }
             }
         }
@@ -120,9 +115,6 @@ fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onSkinClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
-        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Row(
@@ -130,36 +122,26 @@ fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            val imageUri = skin.imageUrl ?: skin.image
-
+            // ⚡ Aquí cargamos las imágenes desde assets correctamente
             AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(imageUri)
-                    .crossfade(true)
-                    .build(),
+                model = "file:///android_asset/${skin.image}",
                 contentDescription = skin.name,
                 modifier = Modifier.size(96.dp),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Crop
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(skin.name, style = MaterialTheme.typography.titleLarge)
+                Text(skin.name, fontWeight = FontWeight.Bold)
                 Text(
-                    skin.categoryName ?: skin.Type ?: skin.Category ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
+                    skin.Type ?: "",
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "$${skin.price}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    "$${skin.price}",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
                 )
-
-                val tierInfo = getTierInfoFromUrl(skin.categoryName ?: "")
-                Spacer(modifier = Modifier.height(6.dp))
-                PillBadge(text = tierInfo.name)
             }
         }
     }

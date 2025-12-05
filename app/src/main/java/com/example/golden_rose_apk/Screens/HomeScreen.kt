@@ -21,28 +21,39 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.model.Category
 import com.example.golden_rose_apk.model.Product
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material.icons.filled.Search
-
-
-
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
+import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
+import com.example.golden_rose_apk.config.Constants
+import com.example.golden_rose_apk.model.Skin
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavController, isGuest: Boolean) {
+fun HomeScreen(
+    navController: NavController,
+    isGuest: Boolean,
+    marketplaceViewModel: MarketplaceViewModel
+) {
     val greeting = if (isGuest) {
         "Bienvenido Invitado a Golden Rose"
     } else {
         "Bienvenido a Golden Rose"
+    }
+    val skins by marketplaceViewModel.skins.collectAsState(initial = emptyList())
+
+    LaunchedEffect(Unit) {
+        marketplaceViewModel.refresh()  // o la función que cargue las skins
     }
 
     var searchText by remember { mutableStateOf("") }
@@ -284,8 +295,8 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.height(400.dp)
             ) {
-                items(topProducts) { product ->
-                    ProductCard(product = product, navController = navController)
+                items(skins) { skin ->
+                    ProductCardFromSkin(skin, navController)
                 }
             }
 
@@ -541,12 +552,112 @@ fun CartBadge(count: Int, onClick: () -> Unit) {
     }
 }
 
-
-
-
-
-@Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun HomeScreenPreview() {
-    HomeScreen(navController = rememberNavController(), isGuest = true)
+fun ProductCardFromSkin(skin: Skin, navController: NavController) {
+    val context = LocalContext.current
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                println("📍 Navegando a detalle de skin ID: ${skin.id}")
+                navController.navigate("product_detail/${skin.id}")
+            },
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            // Manejar diferentes formatos de imagen
+            val imageModifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(12.dp))
+
+            if (skin.hasImageData) {
+                // Si tiene datos de imagen desde API
+                AsyncImage(
+                    model = Constants.productoImagenEndpoint(skin.id.toString()),
+                    contentDescription = skin.name,
+                    modifier = imageModifier,
+                    contentScale = ContentScale.Crop
+                )
+            } else if (skin.imageUrl?.isNotEmpty() == true) {
+                // Si tiene URL de imagen
+                AsyncImage(
+                    model = skin.imageUrl,
+                    contentDescription = skin.name,
+                    modifier = imageModifier,
+                    contentScale = ContentScale.Crop
+                )
+            } else if (skin.image?.isNotEmpty() == true) {
+                // Si tiene imagen en assets
+                AsyncImage(
+                    model = "file:///android_asset/${skin.image}",
+                    contentDescription = skin.name,
+                    modifier = imageModifier,
+                    contentScale = ContentScale.Crop,
+                )
+            } else {
+                // Imagen por defecto
+                Box(
+                    modifier = imageModifier
+                        .background(Color(0xFF5649A5).copy(alpha = 0.1f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Filled.Diamond,
+                        contentDescription = skin.name,
+                        tint = Color(0xFF5649A5),
+                        modifier = Modifier.size(40.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = skin.name ?: "Sin nombre",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "$${skin.price ?: "0.00"}",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF5649A5),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    println("➕ Agregando al carrito: ${skin.name}")
+                    // Aquí puedes agregar lógica para agregar al carrito
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF5649A5)
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Agregar al carrito", fontSize = 12.sp)
+            }
+        }
+    }
 }
+
+
+
