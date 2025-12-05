@@ -30,6 +30,8 @@ import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.model.Category
 import com.example.golden_rose_apk.model.Product
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.compose.material.icons.filled.Search
+
 
 
 
@@ -68,6 +70,7 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
         BottomNavItem("Blogs", Icons.Filled.Article, "blogs"),
         BottomNavItem("Perfil", Icons.Filled.Person, "perfil")
     )
+
 
     Scaffold(
         topBar = {
@@ -120,7 +123,10 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                             Icon(
                                 Icons.Filled.Search,
                                 contentDescription = "Buscar",
-                                tint = Color.White.copy(alpha = 0.8f)
+                                tint = Color.White.copy(alpha = 0.8f),
+                                modifier = Modifier.clickable {
+                                    navController.navigate("search")
+                                }
                             )
                         },
 
@@ -138,7 +144,7 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                         modifier = Modifier.size(42.dp) // Un poco más grande
                     ) {
                         IconButton(
-                            onClick = { /* Abrir filtros */ },
+                            onClick = {  },
                             modifier = Modifier.size(42.dp),
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = Color.Transparent
@@ -151,24 +157,6 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                                 modifier = Modifier.size(22.dp) // Icono más grande
                             )
                         }
-
-                        // Badge opcional de notificaciones (si quieres)
-                        /*
-                        Box(
-                            modifier = Modifier
-                                .size(14.dp)
-                                .background(Color.Red, CircleShape)
-                                .align(Alignment.TopEnd)
-                        ) {
-                            Text(
-                                text = "1",
-                                color = Color.White,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
-                        */
                     }
 
                     // Botón de corazón (favoritos) - MEJORADO

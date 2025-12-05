@@ -16,6 +16,7 @@ import com.example.golden_rose_apk.Screens.LoginScreen
 import com.example.golden_rose_apk.Screens.perfil.PerfilScreen
 import com.example.golden_rose_apk.Screens.RegisterScreen
 import com.example.golden_rose_apk.Screens.WelcomeScreen
+import com.example.golden_rose_apk.Screens.favorites.FavoritesScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -48,6 +49,9 @@ class MainActivity : ComponentActivity() {
                     val isGuest = backStackEntry.arguments?.getString("isGuest")?.toBoolean() ?: false
                     HomeScreen(navController, isGuest)
                 }
+                // TopBar
+                composable("favorites") { FavoritesScreen(navController) }
+
 
                 // Pantallas de la bottom navigation
                 composable("categories") { CategoriesScreen(navController) }
