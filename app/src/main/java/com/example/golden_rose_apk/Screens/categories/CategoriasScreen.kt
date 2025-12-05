@@ -53,7 +53,7 @@ fun CategoriesScreen(navController: NavController) {
                 },
                 actions = {
                     // Espacio invisible para balancear el navigationIcon
-                    Spacer(modifier = Modifier.width(48.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF5649A5),

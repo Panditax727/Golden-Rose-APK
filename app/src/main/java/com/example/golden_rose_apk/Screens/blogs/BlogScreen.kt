@@ -70,12 +70,10 @@ fun BlogScreen(navController: NavController, viewModel: BlogViewModel = viewMode
             if (blogs.isEmpty()) {
                 Text("No hay blogs aún", modifier = Modifier.align(Alignment.Center))
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()
-                    .padding(20.dp)) {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(20.dp)) {
                     items(blogs) { blog ->
                         BlogItem(post = blog) {
-                            // Aquí puedes manejar el click, por ejemplo:
-                            // navController.navigate("blogDetail/${blog.id}")
+                            navController.navigate("blogDetail/${blog.id}")
                         }
                     }
                 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
@@ -74,6 +75,15 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         textAlign = TextAlign.Center
                     )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
+                    }
                 },
                 actions = {
                     // Espacio invisible para balancear el navigationIcon
@@ -181,7 +191,7 @@ fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Delete,
+                        imageVector = Icons.Default.Delete,
                         contentDescription = "Eliminar"
                     )
                 }

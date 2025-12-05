@@ -9,6 +9,7 @@ class SessionManager(context: Context) {
 
     companion object {
         private const val KEY_TOKEN = "jwt_token"
+        private const val KEY_USER_ROLE = "user_role"
     }
 
     fun saveToken(token: String) {
@@ -20,4 +21,10 @@ class SessionManager(context: Context) {
     fun clearToken() {
         prefs.edit().remove(KEY_TOKEN).apply()
     }
+
+    fun saveUserRole(role: String) {
+        prefs.edit().putString(KEY_USER_ROLE, role).apply()
+    }
+
+    fun getUserRole(): String? = prefs.getString(KEY_USER_ROLE, null)
 }

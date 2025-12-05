@@ -1,16 +1,36 @@
 package com.example.golden_rose_apk.ViewModel
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import com.example.golden_rose_apk.config.api.RetrofitInstance
 import com.example.golden_rose_apk.model.AddCartRequest
 import com.example.golden_rose_apk.model.CartItemDto
 import com.example.golden_rose_apk.model.OrderRequest
+import kotlinx.coroutines.launch
+import com.example.golden_rose_apk.model.Skin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-class CartViewModel : ViewModel() {
+// Modelo local para el carrito
+data class CartItem(
+    val skin: Skin,
+    var quantity: Int
+)
+
+// Estados del proceso de checkout
+sealed class CheckoutState {
+    object Idle : CheckoutState()
+    object Loading : CheckoutState()
+    data class Success(
+        val orderId: String?,
+        val paymentId: String?,
+        val paymentLink: String?
+    ) : CheckoutState()
+    data class Error(val message: String) : CheckoutState()
+}
+
+class CartViewModel() : ViewModel(){
 
     private val _cartItems = MutableStateFlow<List<CartItemDto>>(emptyList())
     val cartItems: StateFlow<List<CartItemDto>> get() = _cartItems
@@ -18,6 +38,18 @@ class CartViewModel : ViewModel() {
     init {
         cargarCarrito()
     }
+
+    fun addToCart(productId: Long) {
+        viewModelScope.launch {
+            try {
+                RetrofitInstance.cartApi.agregar(AddCartRequest(productId, 1)) // cantidad 1 por defecto
+                cargarCarrito()
+            } catch (e: Exception) {
+                println("Error al agregar al carrito: ${e.message}")
+            }
+        }
+    }
+
 
     fun cargarCarrito() {
         viewModelScope.launch {

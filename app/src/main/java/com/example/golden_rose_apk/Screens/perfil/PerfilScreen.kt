@@ -197,7 +197,7 @@ fun PerfilScreen(navController: NavController) {
             }
             // Botón Editar Perfil
             TextButton(
-                onClick = { navController.navigate("edit_profile") },
+                onClick = { navController.navigate("settings") },
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp)
             ) {
                 Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
@@ -262,7 +262,7 @@ fun PerfilScreen(navController: NavController) {
                     Log.d("SettingsScreen", "Logout button clicked!")
                     authViewModel.logout()
                     // Navegar al inicio después de cerrar sesión
-                    navController.navigate("welcome") {
+                    navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 },

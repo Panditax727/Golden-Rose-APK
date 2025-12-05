@@ -10,4 +10,6 @@ object Constants {
     const val BASE_PAGOS = "http://54.243.112.243:8006/"
     const val BASE_USUARIO = "http://54.243.112.243:8007/"
     const val BASE_PRODUCTOS = "http://54.243.112.243:8008/"
+
+    fun productoImagenEndpoint(id: String) = "${BASE_PRODUCTOS.trimEnd('/')}/api/productos/$id/imagen"
 }

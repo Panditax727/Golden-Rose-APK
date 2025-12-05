@@ -17,4 +17,8 @@ class BlogViewModel : ViewModel() {
     private fun fetchBlogs() {
         _blogs.value = BlogRepository.getBlogs()
     }
+
+    fun getBlogById(id: Int): Blog? {
+        return _blogs.value.find { it.id == id }
+    }
 }

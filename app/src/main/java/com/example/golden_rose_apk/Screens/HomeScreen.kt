@@ -193,23 +193,23 @@ fun HomeScreen(navController: NavController, isGuest: Boolean) {
                         )
 
                         // Badge del carrito - MEJORADO
-                        Box(
-                            modifier = Modifier
-                                .size(18.dp) // Un poco más grande
-                                .background(
-                                    Color(0xFFFF5252), // Rojo más vibrante
-                                    CircleShape
-                                )
-                                .align(Alignment.TopEnd)
-                        ) {
-                            Text(
-                                text = "3",
-                                color = Color.White,
-                                fontSize = 9.sp, // Un poco más grande
-                                fontWeight = FontWeight.Bold, // Negrita
-                                modifier = Modifier.align(Alignment.Center)
-                            )
-                        }
+                        //Box(
+                            //modifier = Modifier
+                                //.size(18.dp) // Un poco más grande
+                                //.background(
+                                   // Color(0xFFFF5252), // Rojo más vibrante
+                                   // CircleShape
+                                //)
+                               // .align(Alignment.TopEnd)
+                       // ) {
+                            //Text(
+                               // text = "3",
+                               // color = Color.White,
+                               // fontSize = 9.sp, // Un poco más grande
+                               // fontWeight = FontWeight.Bold, // Negrita
+                                //modifier = Modifier.align(Alignment.Center)
+                            //)
+                        //}
                     }
                 }
             }

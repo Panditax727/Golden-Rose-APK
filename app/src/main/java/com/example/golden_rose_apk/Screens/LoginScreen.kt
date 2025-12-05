@@ -287,28 +287,19 @@ fun LoginScreen(navController: NavController) {
                             try {
                                 val service = ApiClient.getAuthClient(context).create(AuthService::class.java)
 
-                                // IMPORTANTE: Verifica si tu LoginRequest usa 'email' o 'username'
-                                // Si tu API espera 'username', usa: LoginRequest(username = email, password = password)
-                                val resp = service.login(LoginRequest(email = email, password = password))
 
+                                val resp = service.login(LoginRequest(email = email, password = password))
                                 if (resp.isSuccessful) {
-                                    resp.body()?.token?.let { token ->
-                                        SessionManager(context).saveToken(token)
-                                        navController.navigate("home") {
-                                            popUpTo("login") { inclusive = true }
-                                        }
+                                    resp.body()?.let { auth ->
+                                        auth.token?.let { token -> SessionManager(context).saveToken(token) }
+                                        auth.rol?.let { role -> SessionManager(context).saveUserRole(role) }
+                                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
                                         Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
                                     } ?: run {
                                         Toast.makeText(context, "Error: Token no recibido", Toast.LENGTH_LONG).show()
                                     }
                                 } else {
-                                    when (resp.code()) {
-                                        400 -> Toast.makeText(context, "Credenciales inválidas", Toast.LENGTH_LONG).show()
-                                        401 -> Toast.makeText(context, "Usuario no autorizado", Toast.LENGTH_LONG).show()
-                                        404 -> Toast.makeText(context, "Usuario no encontrado", Toast.LENGTH_LONG).show()
-                                        500 -> Toast.makeText(context, "Error del servidor", Toast.LENGTH_LONG).show()
-                                        else -> Toast.makeText(context, "Error: ${resp.code()}", Toast.LENGTH_LONG).show()
-                                    }
+                                    Toast.makeText(context, "Error: ${resp.code()}", Toast.LENGTH_LONG).show()
                                 }
                             } catch (e: Exception) {
                                 Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_LONG).show()
