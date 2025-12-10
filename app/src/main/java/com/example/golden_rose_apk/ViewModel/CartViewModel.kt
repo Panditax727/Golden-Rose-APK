@@ -11,14 +11,15 @@ import com.example.golden_rose_apk.model.CartItemPayload
 import com.example.golden_rose_apk.model.CreateOrderRequest
 import com.example.golden_rose_apk.model.PaymentRequest
 import com.example.golden_rose_apk.model.ProductFirestore
-import kotlinx.coroutines.launch
 import com.example.golden_rose_apk.repository.OrderRepository
 import com.example.golden_rose_apk.repository.PaymentRepository
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.io.IOException
-import kotlin.collections.filterNot
-import kotlin.collections.map
+import android.content.Context
+import com.google.gson.Gson
 
 
 data class CartItem(
@@ -30,11 +31,18 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
     private val orderRepository = OrderRepository()
     private val paymentRepository = PaymentRepository()
 
+    private val prefs = application.getSharedPreferences("cart_prefs", Context.MODE_PRIVATE)
+    private val gson = Gson()
+
     private val _cartItems = MutableStateFlow<List<CartItem>>(emptyList())
     val cartItems: StateFlow<List<CartItem>> = _cartItems
 
     private val _checkoutState = MutableStateFlow<CheckoutState>(CheckoutState.Idle)
     val checkoutState: StateFlow<CheckoutState> = _checkoutState
+
+    init {
+        loadCart()   // 👈 al crear el viewmodel, carga lo guardado
+    }
 
     // Agregar producto desde la Firebase
     fun addToCart(product: ProductFirestore) {
@@ -50,6 +58,7 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             _cartItems.value = current
+            saveCart()
         }
     }
 
@@ -57,6 +66,7 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
         _cartItems.value = _cartItems.value.filterNot {
             it.product.id == productId
         }
+        saveCart()
     }
 
     fun updateQuantity(productId: String, quantity: Int) {
@@ -69,10 +79,37 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
             if (it.product.id == productId) it.copy(quantity = quantity)
             else it
         }
+        saveCart()
     }
 
     fun clearCart() {
         _cartItems.value = emptyList()
+        saveCart()
+    }
+
+    // ================== PERSISTENCIA ==================
+
+    private fun saveCart() {
+        viewModelScope.launch {
+            try {
+                val json = gson.toJson(_cartItems.value)
+                prefs.edit().putString("CART_JSON", json).apply()
+            } catch (e: Exception) {
+                Log.e("CartViewModel", "Error guardando carrito", e)
+            }
+        }
+    }
+
+    private fun loadCart() {
+        try {
+            val json = prefs.getString("CART_JSON", null) ?: return
+            val type = object : TypeToken<List<CartItem>>() {}.type
+            val list: List<CartItem>? = gson.fromJson(json, type)
+            _cartItems.value = list ?: emptyList()
+        } catch (e: Exception) {
+            Log.e("CartViewModel", "Error cargando carrito", e)
+            _cartItems.value = emptyList()
+        }
     }
 
     fun checkout(total: Double, userId: String?, token: String?) {
@@ -116,8 +153,6 @@ class CartViewModel(application: Application) : AndroidViewModel(application) {
                     paymentId = payment.id,
                     paymentLink = payment.enlacePago
                 )
-
-                clearCart()
             } catch (e: IOException) {
                 _checkoutState.value = CheckoutState.Error("Error de red.")
             } catch (e: Exception) {

@@ -54,6 +54,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         _pushNotificationsEnabled.value = enabled
         sharedPreferences.edit().putBoolean("PUSH_NOTIFICATIONS", enabled).apply()
     }
+
+    fun setTheme(theme: String) {
+        _appTheme.value = theme
+
+        // TODO: si quieres, aquí guardas en DataStore / SharedPreferences
+        // para que el tema persista aunque cierres la app.
+    }
 }
 
 class SettingsViewModelFactory(private val application: Application) : ViewModelProvider.Factory {

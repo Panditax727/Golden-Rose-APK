@@ -29,17 +29,23 @@ import com.example.golden_rose_apk.Screens.cart.CheckoutScreen
 import com.example.golden_rose_apk.Screens.cart.PaymentSuccessScreen
 import com.example.golden_rose_apk.Screens.cart.ReceiptScreen
 import com.example.golden_rose_apk.Screens.favorites.FavoritesScreen
+import com.example.golden_rose_apk.Screens.orders.MyOrdersScreen
+import com.example.golden_rose_apk.Screens.orders.OrderDetailScreen
+import com.example.golden_rose_apk.Screens.orders.OrderHistoryScreen
+import com.example.golden_rose_apk.Screens.perfil.EditarPefilScreen
 import com.example.golden_rose_apk.Screens.products.ProductDetailScreen
 import com.example.golden_rose_apk.Screens.search.SearchScreen
 import com.example.golden_rose_apk.ViewModel.AuthViewModel
 import com.example.golden_rose_apk.ViewModel.BlogViewModel
 import com.example.golden_rose_apk.ViewModel.CartViewModel
+import com.example.golden_rose_apk.ViewModel.OrdersViewModel
 import com.example.golden_rose_apk.ViewModel.ProductsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.example.golden_rose_apk.ViewModel.UserViewModel
 
 
 class MainActivity : ComponentActivity() {
@@ -76,6 +82,10 @@ class MainActivity : ComponentActivity() {
             //  DECIDIMOS SI YA ESTÁ LOGEADO
             val firebaseAuth = FirebaseAuth.getInstance()
             val alreadyLogged = firebaseAuth.currentUser != null
+
+
+            val userViewModel: UserViewModel = viewModel()
+            val isDarkTheme = currentTheme == "dark"
 
             // Si ya hay usuario, entra directo a "home"
             val startDestination = if (alreadyLogged) "home" else "welcome"
@@ -133,7 +143,36 @@ class MainActivity : ComponentActivity() {
                         BlogDetailScreen(navController, blogId, blogViewModel)
                     }
 
-                    composable("perfil") { PerfilScreen(navController) }
+                    composable("perfil") {
+                        PerfilScreen(
+                            navController = navController,
+                            settingsViewModel = settingsViewModel
+                        )
+                    }
+
+                    composable("editarPerfil") {
+                        EditarPefilScreen(
+                            navController = navController,
+                            userViewModel = userViewModel,
+                            isDarkTheme = isDarkTheme,
+                            onThemeChange = { enabled ->
+                                // ✅ aquí llamamos a SettingsViewModel para cambiar el tema
+                                settingsViewModel.setTheme(
+                                    if (enabled) "dark" else "light"
+                                )
+                            }
+                        )
+                    }
+
+
+                    composable("my_orders") {
+                        val ordersViewModel: OrdersViewModel = viewModel()
+                        MyOrdersScreen(
+                            navController = navController,
+                            ordersViewModel = ordersViewModel
+                        )
+                    }
+
 
                     // Pantalla de detalle de producto
                     composable("productDetail/{productId}") { backStackEntry ->
@@ -158,7 +197,10 @@ class MainActivity : ComponentActivity() {
 
                     // ========== PANTALLAS DEL CARRITO Y CHECKOUT ==========
                     composable("cart") {
-                        CartScreen(navController, cartViewModel)
+                        CartScreen(
+                            navController = navController,
+                            cartViewModel = cartViewModel
+                        )
                     }
 
 
@@ -179,13 +221,36 @@ class MainActivity : ComponentActivity() {
                         )
                     }
 
-                    composable("receipt/{totalAmount}") { backStackEntry ->
-                        val totalAmount = backStackEntry.arguments?.getString("totalAmount")?.toDoubleOrNull() ?: 0.0
+                    composable(
+                        route = "receipt/{total}",
+                    ) { backStackEntry ->
+                        val total = backStackEntry.arguments
+                            ?.getString("total")
+                            ?.toDoubleOrNull() ?: 0.0
+
                         ReceiptScreen(
                             navController = navController,
-                            totalAmount = totalAmount
+                            totalAmount = total,
+                            cartViewModel = cartViewModel
                         )
                     }
+
+                    composable("orderHistory") {
+                        OrderHistoryScreen(
+                            navController = navController
+                        )
+                    }
+
+                    composable("orderDetail/{orderId}") { backStackEntry ->
+                        val orderId = backStackEntry.arguments?.getString("orderId") ?: return@composable
+                        OrderDetailScreen(
+                            navController = navController,
+                            orderId = orderId
+                        )
+                    }
+
+
+
 
 
                 }

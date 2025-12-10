@@ -29,56 +29,70 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
 import com.example.golden_rose_apk.ViewModel.AuthViewModel
 import com.example.golden_rose_apk.ViewModel.AuthViewModelFactory
 import com.example.golden_rose_apk.ViewModel.SettingsViewModel
-import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
 import com.example.golden_rose_apk.model.BottomNavItem
 import java.io.File
 import java.io.FileOutputStream
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.auth.FirebaseAuth
-
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PerfilScreen(navController: NavController) {
+fun PerfilScreen(
+    navController: NavController,
+    settingsViewModel: SettingsViewModel
+) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val authViewModel: AuthViewModel = viewModel(factory = AuthViewModelFactory(application))
-    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(application))
 
+    // Estado que viene del SettingsViewModel COMPARTIDO
     val username by settingsViewModel.username.collectAsState()
     val receiveOffers by settingsViewModel.receiveOffers.collectAsState()
     val currentTheme by settingsViewModel.appTheme.collectAsState()
     val pushNotificationsEnabled by settingsViewModel.pushNotificationsEnabled.collectAsState()
 
-    // Usuario actual de Firebase
+    // ---- Firebase user ----
     val firebaseUser = FirebaseAuth.getInstance().currentUser
-
-// Nombre para mostrar: primero displayName, luego username guardado, luego parte del email
-    val displayName = remember(firebaseUser, username) {
-        firebaseUser?.displayName
-            ?: username.takeIf { it.isNotBlank() }
-            ?: firebaseUser?.email?.substringBefore("@")
-            ?: "Invitado"
-    }
-
-// Email para mostrar (si existe)
     val email = firebaseUser?.email.orEmpty()
 
+    // 🔹 username que viene de Firestore (campo "username")
+    var firestoreUsername by remember { mutableStateOf<String?>(null) }
 
-    // Estado para almacenar imagen
-    var profileImageUri by remember { mutableStateOf<Uri?>(null)}
+    LaunchedEffect(firebaseUser?.uid) {
+        val uid = firebaseUser?.uid ?: return@LaunchedEffect
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { doc ->
+                firestoreUsername = doc.getString("username")
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+            }
+    }
+
+    // Nombre para mostrar: primero displayName, luego username guardado, luego parte del email
+    val displayName = firestoreUsername
+        ?: firebaseUser?.displayName
+        ?: username.takeIf { it.isNotBlank() }
+        ?: email.substringBefore("@")
+        ?: "Invitado"
+
+    // Estado para almacenar imagen de perfil
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Launcher para abrir galería
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -92,7 +106,6 @@ fun PerfilScreen(navController: NavController) {
         contract = ActivityResultContracts.TakePicturePreview()
     ) { bitmap: Bitmap? ->
         if (bitmap != null) {
-            // Convierte el bitmap en URI (se puede guardar en cache)
             val uri = saveBitmapToCache(context, bitmap)
             profileImageUri = uri
         }
@@ -106,8 +119,7 @@ fun PerfilScreen(navController: NavController) {
         }
     }
 
-
-    // Configuración del Bottom Navigation
+    // Bottom Navigation
     val navItems = listOf(
         BottomNavItem("Inicio", Icons.Filled.Home, "home"),
         BottomNavItem("Categorías", Icons.Filled.Category, "categories"),
@@ -126,7 +138,6 @@ fun PerfilScreen(navController: NavController) {
                     )
                 },
                 actions = {
-                    // Espacio invisible para balancear el navigationIcon
                     Spacer(modifier = Modifier.width(48.dp))
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -150,6 +161,7 @@ fun PerfilScreen(navController: NavController) {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Avatar + nombre + email
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -182,10 +194,8 @@ fun PerfilScreen(navController: NavController) {
                     }
                 }
 
-                // 👉 Nombre y email al lado del avatar
                 Column(
-                    modifier = Modifier
-                        .padding(start = 16.dp)
+                    modifier = Modifier.padding(start = 16.dp)
                 ) {
                     Text(
                         text = displayName,
@@ -202,7 +212,7 @@ fun PerfilScreen(navController: NavController) {
                 }
             }
 
-            // Boton para abrir camara
+            // Botón subir imagen
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
@@ -221,16 +231,36 @@ fun PerfilScreen(navController: NavController) {
                     Text("Subir desde galería")
                 }
             }
+
             // Botón Editar Perfil
             TextButton(
-                onClick = { navController.navigate("settings") },
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(bottom = 16.dp)
+                onClick = { navController.navigate("editarPerfil") },
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(bottom = 16.dp)
             ) {
-                Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(ButtonDefaults.IconSize))
+                Icon(
+                    Icons.Default.Person,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
                 Text("Editar Perfil")
             }
 
+            SettingItemDivider(title = "Tus compras")
+
+            TextButton(
+                onClick = { navController.navigate("orderHistory") },
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            ) {
+                Icon(Icons.Default.ShoppingBag, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Mis compras")
+            }
+
+
+            // Preferencias
             SettingItemDivider(title = "Preferencias")
 
             SettingSwitchItem(
@@ -239,6 +269,7 @@ fun PerfilScreen(navController: NavController) {
                 checked = receiveOffers,
                 onCheckedChange = { settingsViewModel.setReceiveOffers(it) }
             )
+
             SettingSwitchItem(
                 text = "Activar notificaciones push",
                 icon = Icons.Default.Notifications,
@@ -247,7 +278,6 @@ fun PerfilScreen(navController: NavController) {
                     settingsViewModel.setPushNotificationsEnabled(enabled)
 
                     if (enabled) {
-                        // Suscribirse al topic "all"
                         FirebaseMessaging.getInstance().subscribeToTopic("all")
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
@@ -255,7 +285,6 @@ fun PerfilScreen(navController: NavController) {
                                 }
                             }
                     } else {
-                        // Cancelar suscripción
                         FirebaseMessaging.getInstance().unsubscribeFromTopic("all")
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
@@ -266,8 +295,14 @@ fun PerfilScreen(navController: NavController) {
                 }
             )
 
+            // Apariencia
             SettingItemDivider(title = "Apariencia")
-            Column(Modifier.selectableGroup().padding(horizontal = 16.dp)) {
+
+            Column(
+                Modifier
+                    .selectableGroup()
+                    .padding(horizontal = 16.dp)
+            ) {
                 ThemeOptionRow(
                     text = "Claro",
                     selected = currentTheme == "light",
@@ -287,13 +322,20 @@ fun PerfilScreen(navController: NavController) {
                 onClick = {
                     Log.d("SettingsScreen", "Logout button clicked!")
                     authViewModel.logout()
-                    // Navegar al inicio después de cerrar sesión
+
                     navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
+                        popUpTo(navController.graph.startDestinationId) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
             ) {
                 Icon(Icons.Filled.ExitToApp, contentDescription = null)
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -336,8 +378,6 @@ fun SettingSwitchItem(
     }
 }
 
-
-
 @Composable
 fun ThemeOptionRow(text: String, selected: Boolean, onClick: () -> Unit) {
     Row(
@@ -368,10 +408,4 @@ fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
     out.flush()
     out.close()
     return file.toUri()
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun PerfilScreenPreview() {
-    PerfilScreen(navController = rememberNavController())
 }

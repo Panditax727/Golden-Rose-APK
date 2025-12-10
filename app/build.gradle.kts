@@ -87,6 +87,11 @@ dependencies {
     implementation("com.google.firebase:firebase-storage-ktx")
     // ====================================================
 
+    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.androidx.compose.runtime)
+    implementation(libs.androidx.material3)
+
     // ELIMINADO (causaba conflictos)
     // implementation(libs.firebase.firestore.ktx)
     // implementation(libs.firebase.auth.ktx)

@@ -620,6 +620,7 @@ fun RegisterScreen(navController: NavController) {
                     Text("Crear Cuenta")
                 }
             }
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 

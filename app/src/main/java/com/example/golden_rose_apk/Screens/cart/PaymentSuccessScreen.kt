@@ -103,7 +103,7 @@ fun PaymentSuccessScreen(
             }
 
             OutlinedButton(
-                onClick = { navController.navigate("marketplace") },
+                onClick = { navController.navigate("categories") },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Icon(Icons.Default.ShoppingBag, contentDescription = null)

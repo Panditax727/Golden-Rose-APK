@@ -34,3 +34,17 @@ data class OrderResponse(
     val total: Double?,
     val estado: String?
 )
+
+data class OrderItem(
+    val productName: String = "",
+    val quantity: Int = 0,
+    val price: Double = 0.0
+)
+
+data class Order(
+    val id: String = "",
+    val userId: String = "",
+    val createdAt: Long = System.currentTimeMillis(),
+    val items: List<OrderItem> = emptyList(),
+    val total: Double = 0.0
+)

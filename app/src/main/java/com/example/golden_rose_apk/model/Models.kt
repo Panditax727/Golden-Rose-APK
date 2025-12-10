@@ -45,3 +45,11 @@ data class BlogPost(
     val comments: Int = 0
 )
 
+data class UserUi(
+    val displayName: String = "",
+    val nickname: String = "",
+    val email: String = "",
+    val country: String = "",
+    val darkMode: Boolean = false
+)
+

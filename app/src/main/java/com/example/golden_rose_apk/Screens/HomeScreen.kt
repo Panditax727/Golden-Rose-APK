@@ -29,6 +29,7 @@ import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.model.Category
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
@@ -77,22 +78,22 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(90.dp)
-                    .background(Color(0xFF5649A5))
+                    .background(colorScheme.primary)
                     .padding(horizontal = 16.dp, vertical = 16.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp) // Un poco más de espacio
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Barra de búsqueda - MEJORADA
+                    // Barra de búsqueda
                     OutlinedTextField(
                         value = searchText,
                         onValueChange = { searchText = it },
                         label = {
                             Text(
                                 "¿Qué buscas?",
-                                color = Color.White.copy(alpha = 0.8f)
+                                color = colorScheme.onPrimary.copy(alpha = 0.8f)
                             )
                         },
                         modifier = Modifier
@@ -100,49 +101,48 @@ fun HomeScreen(
                             .height(45.dp),
                         shape = RoundedCornerShape(25.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
-                            focusedLabelColor = Color.White.copy(alpha = 0.9f),
-                            unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                            cursorColor = Color.White,
-                            focusedContainerColor = Color.White.copy(alpha = 0.1f),
-                            unfocusedContainerColor = Color.White.copy(alpha = 0.05f)
+                            focusedBorderColor = colorScheme.onPrimary,
+                            unfocusedBorderColor = colorScheme.onPrimary.copy(alpha = 0.7f),
+                            focusedLabelColor = colorScheme.onPrimary.copy(alpha = 0.9f),
+                            unfocusedLabelColor = colorScheme.onPrimary.copy(alpha = 0.6f),
+                            focusedTextColor = colorScheme.onPrimary,
+                            unfocusedTextColor = colorScheme.onPrimary,
+                            cursorColor = colorScheme.onPrimary,
+                            focusedContainerColor = colorScheme.onPrimary.copy(alpha = 0.12f),
+                            unfocusedContainerColor = colorScheme.onPrimary.copy(alpha = 0.08f)
                         ),
                         leadingIcon = {
                             Icon(
                                 Icons.Filled.Menu,
                                 contentDescription = "Menú",
-                                tint = Color.White
+                                tint = colorScheme.onPrimary
                             )
                         },
                         trailingIcon = {
                             Icon(
                                 Icons.Filled.Search,
                                 contentDescription = "Buscar",
-                                tint = Color.White.copy(alpha = 0.8f),
+                                tint = colorScheme.onPrimary.copy(alpha = 0.8f),
                                 modifier = Modifier.clickable {
                                     navController.navigate("search")
                                 }
                             )
                         },
-
                         singleLine = true,
                         placeholder = {
                             Text(
                                 "Buscar productos...",
-                                color = Color.White.copy(alpha = 0.5f) // Placeholder visible
+                                color = colorScheme.onPrimary.copy(alpha = 0.5f)
                             )
                         }
                     )
 
-                    // Botón de notificaciones (campana) - MEJORADO
+                    // Botón de notificaciones
                     Box(
-                        modifier = Modifier.size(42.dp) // Un poco más grande
+                        modifier = Modifier.size(42.dp)
                     ) {
                         IconButton(
-                            onClick = {  },
+                            onClick = { },
                             modifier = Modifier.size(42.dp),
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = Color.Transparent
@@ -151,14 +151,13 @@ fun HomeScreen(
                             Icon(
                                 Icons.Filled.Notifications,
                                 contentDescription = "Notificaciones",
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp) // Icono más grande
+                                tint = colorScheme.onPrimary,
+                                modifier = Modifier.size(22.dp)
                             )
                         }
                     }
 
-                    // Botón de corazón (favoritos) - MEJORADO
-
+                    // Botón de favoritos (solo si no es invitado)
                     if (!isGuest) {
                         IconButton(
                             onClick = { navController.navigate("favorites") },
@@ -170,13 +169,13 @@ fun HomeScreen(
                             Icon(
                                 Icons.Filled.Favorite,
                                 contentDescription = "Favoritos",
-                                tint = Color.White,
+                                tint = colorScheme.onPrimary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
                     }
 
-                    // Botón de carrito - MEJORADO
+                    // Botón de carrito
                     Box(
                         modifier = Modifier
                             .size(42.dp)
@@ -185,7 +184,7 @@ fun HomeScreen(
                         Icon(
                             Icons.Filled.ShoppingCart,
                             contentDescription = "Carrito",
-                            tint = Color.White,
+                            tint = colorScheme.onPrimary,
                             modifier = Modifier
                                 .size(22.dp)
                                 .align(Alignment.Center)
@@ -205,7 +204,7 @@ fun HomeScreen(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .background(Color(0xFFF8F9FA))
+                .background(colorScheme.background)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
@@ -216,7 +215,7 @@ fun HomeScreen(
                     text = if (isGuest) "Bienvenido Invitado a Golden Rose" else "Bienvenido a Golden Rose",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF5649A5)
+                    color = colorScheme.onBackground
                 )
             }
 
@@ -225,7 +224,7 @@ fun HomeScreen(
                 text = "Categorías Destacadas",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = colorScheme.onBackground
             )
 
             LazyRow(
@@ -247,18 +246,21 @@ fun HomeScreen(
                     text = "Lo más vendido",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.Black
+                    color = colorScheme.onBackground
                 )
                 Text(
                     text = "Ver todo →",
                     fontSize = 14.sp,
-                    color = Color(0xFF5649A5),
-                    modifier = Modifier.clickable { navController.navigate("all_products") }
+                    color = colorScheme.primary,
+                    modifier = Modifier.clickable { navController.navigate("categories") }
                 )
             }
 
             if (products.isEmpty()) {
-                Text("No hay productos disponibles")
+                Text(
+                    "No hay productos disponibles",
+                    color = colorScheme.onBackground
+                )
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -274,7 +276,7 @@ fun HomeScreen(
                             onAddToCart = {
                                 scope.launch {
                                     snackbarHostState.showSnackbar(
-                                        "✅ ${product.name} agregado al carrito"
+                                        "${product.name} agregado al carrito"
                                     )
                                 }
                             }
@@ -283,7 +285,7 @@ fun HomeScreen(
                 }
             }
 
-            // Grid de productos más vendidos
+            // Grid de productos más vendidos (skins)
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -298,7 +300,7 @@ fun HomeScreen(
                         onAddToCart = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "✅ \${skin.name} agregada al carrito",
+                                    message = "✅ ${product.name} agregada al carrito",
                                     duration = SnackbarDuration.Short
                                 )
                             }
@@ -318,13 +320,15 @@ fun HomeScreen(
 // Componente de tarjeta de categoría
 @Composable
 fun CategoryCard(category: Category) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier
             .size(120.dp)
             .clickable { /* Navegar a categoría */ },
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = category.color.copy(alpha = 0.1f)
+            containerColor = colorScheme.surfaceVariant
         )
     ) {
         Box(
@@ -354,7 +358,7 @@ fun CategoryCard(category: Category) {
                     text = category.name,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
+                    color = colorScheme.onSurface
                 )
             }
         }
@@ -369,13 +373,15 @@ fun ProductCard(
     cartViewModel: CartViewModel,
     onAddToCart: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { navController.navigate("productDetail/${product.id}") },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -398,7 +404,7 @@ fun ProductCard(
                 text = product.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
+                color = colorScheme.onSurface,
                 maxLines = 1,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -409,17 +415,21 @@ fun ProductCard(
                 text = "$${product.price}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF5649A5),
+                color = colorScheme.primary,
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
-                onClick = { navController.navigate("cart") },
+                onClick = {
+                    cartViewModel.addToCart(product)
+                    onAddToCart()
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF5649A5)
+                    containerColor = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -436,20 +446,21 @@ fun HomeBottomNavigationBar(
     navItems: List<BottomNavItem>
 ) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+    val colorScheme = MaterialTheme.colorScheme
 
     NavigationBar(
-        containerColor = Color.White
+        containerColor = colorScheme.surface
     ) {
         navItems.forEach { item ->
+            val isSelected = currentRoute == item.route ||
+                    (item.route == "home" && currentRoute?.startsWith("home/") == true)
+
             NavigationBarItem(
-                selected = currentRoute == item.route ||
-                        (item.route == "home" && currentRoute?.startsWith("home/") == true),
+                selected = isSelected,
                 onClick = {
-                    // Navegación simple y directa
                     if (item.route == "home") {
                         navController.navigate("home/false") {
                             launchSingleTop = true
-                            // Limpiar pila para evitar múltiples homes
                             popUpTo("home") { inclusive = true }
                         }
                     } else {
@@ -460,29 +471,28 @@ fun HomeBottomNavigationBar(
                     }
                 },
                 icon = {
-                    val isSelected = currentRoute == item.route ||
-                            (item.route == "home" && currentRoute?.startsWith("home/") == true)
                     Icon(
                         imageVector = item.icon,
                         contentDescription = item.title,
-                        tint = if (isSelected) Color(0xFF5649A5) else Color.Gray
+                        tint = if (isSelected) colorScheme.primary else colorScheme.onSurfaceVariant
                     )
                 },
                 label = {
-                    val isSelected = currentRoute == item.route ||
-                            (item.route == "home" && currentRoute?.startsWith("home/") == true)
                     Text(
                         text = item.title,
-                        color = if (isSelected) Color(0xFF5649A5) else Color.Gray
+                        color = if (isSelected) colorScheme.primary else colorScheme.onSurfaceVariant
                     )
                 }
             )
         }
     }
 }
+
 // Componente reutilizable para badge de notificaciones
 @Composable
 fun NotificationBadge(count: Int, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Box(
         modifier = Modifier.size(40.dp)
     ) {
@@ -496,7 +506,7 @@ fun NotificationBadge(count: Int, onClick: () -> Unit) {
             Icon(
                 Icons.Outlined.Notifications,
                 contentDescription = "Notificaciones",
-                tint = Color.White,
+                tint = colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -520,7 +530,6 @@ fun NotificationBadge(count: Int, onClick: () -> Unit) {
     }
 }
 
-
 @Composable
 fun ProductCardFromSkin(
     skin: ProductFirestore,
@@ -529,12 +538,14 @@ fun ProductCardFromSkin(
     onAddToCart: () -> Unit,
     onClick: () -> Unit
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -556,7 +567,8 @@ fun ProductCardFromSkin(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                color = colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -565,7 +577,7 @@ fun ProductCardFromSkin(
                 text = "$${skin.price}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF5649A5)
+                color = colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -576,7 +588,10 @@ fun ProductCardFromSkin(
                     onAddToCart()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5649A5))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colorScheme.primary,
+                    contentColor = colorScheme.onPrimary
+                )
             ) {
                 Text("Agregar al carrito", fontSize = 12.sp)
             }
@@ -584,9 +599,10 @@ fun ProductCardFromSkin(
     }
 }
 
-
 @Composable
 fun CartBadge(count: Int, onClick: () -> Unit) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Box(modifier = Modifier.size(40.dp)) {
         IconButton(
             onClick = onClick,
@@ -598,7 +614,7 @@ fun CartBadge(count: Int, onClick: () -> Unit) {
             Icon(
                 Icons.Outlined.ShoppingCart,
                 contentDescription = "Carrito",
-                tint = Color.White,
+                tint = colorScheme.onPrimary,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -607,22 +623,16 @@ fun CartBadge(count: Int, onClick: () -> Unit) {
             Box(
                 modifier = Modifier
                     .size(18.dp)
-                    .background(Color(0xFFFF9800), CircleShape)
-                    .align(Alignment.TopEnd)
+                    .background(Color(0xFFFF9800), CircleShape),
+                contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = if (count > 9) "9+" else count.toString(),
                     color = Color.White,
                     fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.align(Alignment.Center)
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
     }
 }
-
-
-
-
-

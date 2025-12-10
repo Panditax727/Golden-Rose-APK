@@ -63,7 +63,7 @@ fun CartScreen(navController: NavController,
         (cartItem.product.price ?: 0.0) * cartItem.quantity
     }
     val commission = if (subtotal > 0) subtotal * 0.05 else 0.0
-    val shipping = if (subtotal > 0) 1490.0 else 0.0
+    val shipping = if (subtotal > 0) 5.0 else 0.0
     val total = subtotal + commission + shipping
 
     val navItems = listOf(
