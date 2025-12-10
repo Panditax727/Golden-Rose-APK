@@ -44,18 +44,23 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
+import com.example.golden_rose_apk.ViewModel.CartItem
 import com.example.golden_rose_apk.ViewModel.CartViewModel
-import com.example.golden_rose_apk.ViewModel.LocalCartItem
 import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.utils.formatPrice
 
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
+fun CartScreen(navController: NavController,
+               cartViewModel: CartViewModel
+) {
     val cartItems by cartViewModel.cartItems.collectAsState()
+
     val subtotal = cartItems.sumOf { cartItem ->
-        (cartItem.skin.price ?: 0.0) * cartItem.quantity
+        (cartItem.product.price ?: 0.0) * cartItem.quantity
     }
     val commission = if (subtotal > 0) subtotal * 0.05 else 0.0
     val shipping = if (subtotal > 0) 1490.0 else 0.0
@@ -71,7 +76,13 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Carrito de Compras", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                title = {
+                    Text(
+                        "Carrito de Compras",
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.Default.ArrowBack, "Volver", tint = Color.White)
@@ -84,11 +95,24 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                 )
             )
         },
-        bottomBar = { HomeBottomNavigationBar(navController = navController, navItems = navItems) }
+        bottomBar = {
+            HomeBottomNavigationBar(
+                navController = navController,
+                navItems = navItems
+            )
+        }
     ) { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(16.dp)
+        ) {
             if (cartItems.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Tu carrito está vacío")
                         Spacer(modifier = Modifier.height(16.dp))
@@ -98,26 +122,40 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                     }
                 }
             } else {
-                LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                     items(cartItems) { item ->
                         CartItemRow(item = item, viewModel = cartViewModel)
                     }
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Divider()
                 Spacer(modifier = Modifier.height(8.dp))
+
                 SummaryRow("Subtotal:", subtotal)
                 SummaryRow("Envío:", shipping)
                 SummaryRow("Comisión:", commission)
-                Spacer(modifier = Modifier.height(8.dp))
-                Divider()
 
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Divider()
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
                     Text("Total:", fontWeight = FontWeight.Bold)
-                    Text("$${total.formatPrice()}", fontWeight = FontWeight.Bold)
+                    Text(
+                        "$${total.formatPrice()}",
+                        fontWeight = FontWeight.Bold
+                    )
                 }
+
                 Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
                     onClick = { navController.navigate("checkout") },
                     modifier = Modifier.fillMaxWidth(),
@@ -131,62 +169,86 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
 }
 
 @Composable
-fun CartItemRow(item: LocalCartItem, viewModel: CartViewModel) {
+fun CartItemRow(item: CartItem, viewModel: CartViewModel) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(item.skin.name ?: "Sin nombre", maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+            ) {
+                Text(
+                    text = item.product.name ?: "Sin nombre",
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Text("Cantidad: ${item.quantity}")
                 Text(
-                    "Subtotal: $${((item.skin.price ?: 0.0) * item.quantity).formatPrice()}",
+                    "Subtotal: $${((item.product.price ?: 0.0) * item.quantity).formatPrice()}",
                     fontWeight = FontWeight.Bold
                 )
-
-
             }
+
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.skin.id, item.quantity - 1) },
+                    onClick = {
+                        viewModel.updateQuantity(
+                            item.product.id,
+                            item.quantity - 1
+                        )
+                    },
                     enabled = item.quantity > 1,
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
-                ) { Text("-") }
+                ) {
+                    Text("-")
+                }
 
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("${item.quantity}")
                 Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.skin.id, item.quantity + 1) },
+                    onClick = {
+                        viewModel.updateQuantity(
+                            item.product.id,
+                            item.quantity + 1
+                        )
+                    },
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
-                ) { Text("+") }
-
-                Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { viewModel.removeFromCart(item.skin.id) }) {
-                    Icon(Icons.Default.Delete, "Eliminar")
+                ) {
+                    Text("+")
                 }
 
+                Spacer(modifier = Modifier.width(16.dp))
+
+                IconButton(
+                    onClick = {
+                        viewModel.removeFromCart(item.product.id)
+                    }
+                ) {
+                    Icon(Icons.Default.Delete, "Eliminar")
+                }
             }
         }
     }
 }
 
 @Composable
-fun SummaryRowText(label: String, value: String) {
+fun SummaryRow(label: String, amount: Double) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label)
-        Text(value)
+        Text("$${amount.formatPrice()}")
     }
 }
-
 
 
 

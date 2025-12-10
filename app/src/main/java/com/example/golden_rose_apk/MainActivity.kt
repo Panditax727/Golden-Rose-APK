@@ -20,7 +20,6 @@ import com.example.golden_rose_apk.Screens.blogs.BlogScreen
 import com.example.golden_rose_apk.Screens.categories.CategoriesScreen
 import com.example.golden_rose_apk.Screens.HomeScreen
 import com.example.golden_rose_apk.Screens.LoginScreen
-import com.example.golden_rose_apk.Screens.MarketplaceScreen
 import com.example.golden_rose_apk.Screens.perfil.PerfilScreen
 import com.example.golden_rose_apk.Screens.RegisterScreen
 import com.example.golden_rose_apk.Screens.WelcomeScreen
@@ -35,11 +34,12 @@ import com.example.golden_rose_apk.Screens.search.SearchScreen
 import com.example.golden_rose_apk.ViewModel.AuthViewModel
 import com.example.golden_rose_apk.ViewModel.BlogViewModel
 import com.example.golden_rose_apk.ViewModel.CartViewModel
-import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
+import com.example.golden_rose_apk.ViewModel.ProductsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.FirebaseApp
+import com.google.firebase.auth.FirebaseAuth
 
 
 class MainActivity : ComponentActivity() {
@@ -73,43 +73,52 @@ class MainActivity : ComponentActivity() {
             val currentTheme by settingsViewModel.appTheme.collectAsState()
             val isDark = currentTheme == "dark"
 
+            //  DECIDIMOS SI YA ESTÁ LOGEADO
+            val firebaseAuth = FirebaseAuth.getInstance()
+            val alreadyLogged = firebaseAuth.currentUser != null
 
+            // Si ya hay usuario, entra directo a "home"
+            val startDestination = if (alreadyLogged) "home" else "welcome"
             MaterialTheme(
                 colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
             ) {
                 val cartViewModel: CartViewModel = viewModel()
                 val navController = rememberNavController()
+                val productsViewModel: ProductsViewModel = viewModel()
                 NavHost(
-                    navController = navController, startDestination = "welcome") {
+                    navController = navController,
+                    startDestination = startDestination
+
+                ) {
                     composable("welcome") { WelcomeScreen(navController) }
                     composable("login") { LoginScreen(navController) }
                     composable("register") { RegisterScreen(navController) }
 
                     // Pantalla principal con parámetro opcional
                     composable("home") {
-                        val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        val cartViewModel: CartViewModel = viewModel()
                         HomeScreen(
                             navController = navController,
                             isGuest = false,
-                            marketplaceViewModel = marketplaceViewModel,
+                            productsViewModel = productsViewModel,
                             cartViewModel = cartViewModel
                         )
                     }
+
                     // Pantalla principal como Invitado
                     composable("home/{isGuest}") { backStackEntry ->
-                        val isGuest = backStackEntry.arguments?.getString("isGuest")?.toBoolean() ?: false
-                        val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        val cartViewModel: CartViewModel = viewModel()
+                        val isGuest = backStackEntry.arguments
+                            ?.getString("isGuest")
+                            ?.toBoolean() ?: false
+
                         HomeScreen(
                             navController = navController,
                             isGuest = isGuest,
-                            marketplaceViewModel = marketplaceViewModel,
+                            productsViewModel = productsViewModel,
                             cartViewModel = cartViewModel
                         )
                     }
-                    // TopBar
 
+                    // TopBar
                     // Pantallas de la bottom navigation
                     composable("categories") {
                         CategoriesScreen(navController)
@@ -126,34 +135,22 @@ class MainActivity : ComponentActivity() {
 
                     composable("perfil") { PerfilScreen(navController) }
 
-                    // ========== PANTALLAS DE PRODUCTOS ==========
-                    composable("marketplace") {
-                        val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        MarketplaceScreen(
-                            navController = navController,
-                            viewModel = marketplaceViewModel,
-                            cartViewModel = cartViewModel
-                        )
-                    }
-
                     // Pantalla de detalle de producto
                     composable("productDetail/{productId}") { backStackEntry ->
                         val productId = backStackEntry.arguments
                             ?.getString("productId")
                             ?: ""
-                        val marketplaceViewModel: MarketplaceViewModel = viewModel()
 
                         ProductDetailScreen(
                             navController = navController,
                             productId = productId,
-                            marketplaceViewModel = marketplaceViewModel,
+                            productsViewModel = productsViewModel,
                             cartViewModel = cartViewModel
                         )
                     }
 
                     composable("search") {
-                        val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        SearchScreen(navController, marketplaceViewModel)
+                        SearchScreen(navController = navController)
                     }
 
                     // ========== PANTALLAS DE FAVORITOS ==========

@@ -25,41 +25,40 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
-import com.example.golden_rose_apk.model.Skin
+import com.example.golden_rose_apk.ViewModel.ProductsViewModel
+import com.example.golden_rose_apk.model.ProductFirestore
 import com.example.golden_rose_apk.ui.components.GoldenRoseScreen
-import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SearchScreen(navController: NavController, viewModel: MarketplaceViewModel) {
-    val allSkins by viewModel.skins.collectAsState()
-    val searchQuery by viewModel.searchQuery.collectAsState()
-    val isLoading by viewModel.isLoading.collectAsState()
-    val error by viewModel.error.collectAsState()
+fun SearchScreen(
+    navController: NavController,
+    productsViewModel: ProductsViewModel = viewModel()
+) {
+    val allProducts by productsViewModel.products.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(error) {
-        error?.let { message ->
-            scope.launch { snackbarHostState.showSnackbar(message) }
-        }
+    val filteredProducts = allProducts.filter { product ->
+        product.name.contains(searchQuery, ignoreCase = true)
     }
-
-    val filteredSkins = allSkins.filter { it.name.contains(searchQuery, ignoreCase = true) }
 
     GoldenRoseScreen(
         title = "Marketplace",
@@ -69,7 +68,7 @@ fun SearchScreen(navController: NavController, viewModel: MarketplaceViewModel) 
         Column(modifier = Modifier.padding(16.dp)) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = viewModel::onSearchQueryChange,
+                onValueChange = { searchQuery = it },
                 label = { Text("Buscar por nombre") },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                 modifier = Modifier
@@ -78,7 +77,8 @@ fun SearchScreen(navController: NavController, viewModel: MarketplaceViewModel) 
                 singleLine = true
             )
 
-            if (isLoading && allSkins.isEmpty()) {
+            // Loading básico cuando no hay productos aún
+            if (allProducts.isEmpty() && searchQuery.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -93,13 +93,16 @@ fun SearchScreen(navController: NavController, viewModel: MarketplaceViewModel) 
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(filteredSkins) { skin ->
-                    SkinCard(skin) {
-                        navController.navigate("productDetail/${skin.id}")
+                items(filteredProducts) { product ->
+                    SkinCard(product) {
+                        navController.navigate("productDetail/${product.id}")
                     }
                 }
 
-                if (filteredSkins.isEmpty() && searchQuery.isNotEmpty() && !isLoading) {
+                if (filteredProducts.isEmpty() &&
+                    searchQuery.isNotEmpty() &&
+                    allProducts.isNotEmpty()
+                ) {
                     item {
                         Text(
                             "No encontramos resultados para \"$searchQuery\"",
@@ -113,7 +116,10 @@ fun SearchScreen(navController: NavController, viewModel: MarketplaceViewModel) 
 }
 
 @Composable
-fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
+fun SkinCard(
+    product: ProductFirestore,
+    onSkinClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -125,23 +131,29 @@ fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // ⚡ Aquí cargamos las imágenes desde assets correctamente
+            // Imagen desde URL (la que ya usas en Home)
             AsyncImage(
-                model = "file:///android_asset/${skin.image}",
-                contentDescription = skin.name,
+                model = product.image,
+                contentDescription = product.name,
                 modifier = Modifier.size(96.dp),
                 contentScale = ContentScale.Crop
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(skin.name, fontWeight = FontWeight.Bold)
-                Text(
-                    skin.Type ?: "",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(product.name, fontWeight = FontWeight.Bold)
+
+                // Si tu ProductFirestore tiene algún campo de tipo, úsalo aquí
+                // product.type?.let {
+                //     Text(
+                //         it,
+                //         color = MaterialTheme.colorScheme.onSurfaceVariant
+                //     )
+                // }
+
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    "$${skin.price}",
+                    "$${product.price}",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )

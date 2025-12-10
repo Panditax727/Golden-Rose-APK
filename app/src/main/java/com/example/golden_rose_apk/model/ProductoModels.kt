@@ -91,3 +91,4 @@ fun ProductoDto.toApiResponse(): ProductoApiResponse {
         activo = this.activo ?: true
     )
 }
+

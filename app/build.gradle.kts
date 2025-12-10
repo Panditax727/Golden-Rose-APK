@@ -3,8 +3,10 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
+
     // Plugin necesario para Firebase
     id("com.google.gms.google-services")
+
 }
 
 android {
@@ -75,15 +77,15 @@ dependencies {
 
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // ============= FIREBASE (CORRECTO) =============
+    // ============= FIREBASE (FORMA CORRECTA) =============
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
     implementation("com.google.firebase:firebase-messaging-ktx")
-    implementation(libs.firebase.crashlytics.buildtools)
-    // =================================================
+    implementation("com.google.firebase:firebase-storage-ktx")
+    // ====================================================
 
     // ELIMINADO (causaba conflictos)
     // implementation(libs.firebase.firestore.ktx)

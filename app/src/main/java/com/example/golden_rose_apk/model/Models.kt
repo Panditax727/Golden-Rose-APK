@@ -2,20 +2,10 @@ package com.example.golden_rose_apk.model
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
-//data class LoginRequest(
-//    val email:  String,
-//    val password: String
-//)
 
 data class LoginResponse(
     val token: String
 )
-
-//data class RegisterRequest(
-//    val username: String,
-//    val email: String,
-//    val password: String
-//)
 
 data class BottomNavItem(
     val title: String,
@@ -28,10 +18,14 @@ data class Category(
     val color: androidx.compose.ui.graphics.Color
 )
 
-data class Product(
-    val name: String,
-    val price: String,
-    val backgroundColor: androidx.compose.ui.graphics.Color
+data class ProductFirestore(
+    val id: String = "",
+    val name: String = "",
+    val price: Double = 0.0,
+    val type: String = "",
+    val category: String = "",
+    val image: String = "",
+    val desc: String = ""
 )
 
 data class CheckoutItem(
@@ -49,12 +43,5 @@ data class BlogPost(
     val likes: Int = 0,
     val content: String,
     val comments: Int = 0
-)
-
-data class Usuarios(
-    val username: String,
-    val email: String,
-    val telefono: String,
-    val role: String
 )
 

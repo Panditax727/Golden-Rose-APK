@@ -43,18 +43,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
 import com.example.golden_rose_apk.ViewModel.CartViewModel
-import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
-import com.example.golden_rose_apk.config.Constants
+import com.example.golden_rose_apk.ViewModel.ProductsViewModel
 import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.ui.components.GoldenSurfaceCard
 import com.example.golden_rose_apk.ui.components.PillBadge
@@ -67,11 +64,11 @@ import kotlinx.coroutines.launch
 fun ProductDetailScreen(
     navController: NavController,
     productId: String,
-    marketplaceViewModel: MarketplaceViewModel,
+    productsViewModel: ProductsViewModel,
     cartViewModel: CartViewModel,
 ) {
-    val skins by marketplaceViewModel.skins.collectAsState()
-    val skin = skins.find { it.id.toString() == productId }
+    val skins  by productsViewModel.products.collectAsState()
+    val skin  = skins.find { it.id == productId }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -79,7 +76,7 @@ fun ProductDetailScreen(
 
     LaunchedEffect(productId) {
         if (skin == null) {
-            marketplaceViewModel.refresh()
+            productsViewModel.refresh()
         }
     }
 
@@ -181,22 +178,17 @@ fun ProductDetailScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        // Imagen del producto
-                        val imageUri = skin.imageUrl ?: skin.image
 
                         AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(imageUri)
-                                .crossfade(true)
-                                .build(),
+                            model = skin.image,
                             contentDescription = "Skin Image",
                             modifier = Modifier.size(200.dp)
                         )
 
-
                         // Badge de tier
-                        val categoryString = skin.Category ?: skin.categoryName ?: ""
+                        val categoryString = skin.category
                         val tierInfo = getTierInfoFromUrl(categoryString)
+
                         PillBadge(
                             text = tierInfo.name,
                             modifier = Modifier.align(Alignment.Start)
@@ -204,7 +196,7 @@ fun ProductDetailScreen(
 
                         // Tipo de skin
                         Text(
-                            text = "Tipo: ${skin.Type ?: skin.categoryName.orEmpty()}",
+                            text = "Tipo: ${skin.type}",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontWeight = FontWeight.Medium

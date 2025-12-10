@@ -14,7 +14,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,6 +45,8 @@ import com.example.golden_rose_apk.model.BottomNavItem
 import java.io.File
 import java.io.FileOutputStream
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.auth.FirebaseAuth
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +61,21 @@ fun PerfilScreen(navController: NavController) {
     val receiveOffers by settingsViewModel.receiveOffers.collectAsState()
     val currentTheme by settingsViewModel.appTheme.collectAsState()
     val pushNotificationsEnabled by settingsViewModel.pushNotificationsEnabled.collectAsState()
+
+    // Usuario actual de Firebase
+    val firebaseUser = FirebaseAuth.getInstance().currentUser
+
+// Nombre para mostrar: primero displayName, luego username guardado, luego parte del email
+    val displayName = remember(firebaseUser, username) {
+        firebaseUser?.displayName
+            ?: username.takeIf { it.isNotBlank() }
+            ?: firebaseUser?.email?.substringBefore("@")
+            ?: "Invitado"
+    }
+
+// Email para mostrar (si existe)
+    val email = firebaseUser?.email.orEmpty()
+
 
     // Estado para almacenar imagen
     var profileImageUri by remember { mutableStateOf<Uri?>(null)}
@@ -134,7 +150,6 @@ fun PerfilScreen(navController: NavController) {
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Avatar y nombre de usuario
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -159,11 +174,30 @@ fun PerfilScreen(navController: NavController) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = username.take(1).uppercase(),
+                                text = displayName.take(1).uppercase(),
                                 color = Color.White,
                                 style = MaterialTheme.typography.headlineLarge
                             )
                         }
+                    }
+                }
+
+                // 👉 Nombre y email al lado del avatar
+                Column(
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                ) {
+                    Text(
+                        text = displayName,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (email.isNotBlank()) {
+                        Text(
+                            text = email,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }
@@ -185,15 +219,6 @@ fun PerfilScreen(navController: NavController) {
                     Icon(Icons.Default.Image, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text("Subir desde galería")
-                }
-
-
-                Spacer(Modifier.width(16.dp))
-
-                TextButton(onClick = { cameraLauncher.launch(null) }) {
-                    Icon(Icons.Default.PhotoCamera, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
-                    Text("Tomar foto")
                 }
             }
             // Botón Editar Perfil

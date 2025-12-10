@@ -112,17 +112,3 @@ fun CheckoutScreen(
         }
     }
 }
-
-
-@Composable
-fun SummaryRow(
-    label: String, value: Double
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
-        Text("$${value.formatPrice()}", style = MaterialTheme.typography.bodyMedium)
-    }
-}

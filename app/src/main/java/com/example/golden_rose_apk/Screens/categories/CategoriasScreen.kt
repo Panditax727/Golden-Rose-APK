@@ -26,16 +26,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -43,34 +40,29 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
 import com.example.golden_rose_apk.model.BottomNavItem
-import com.example.golden_rose_apk.model.Skin
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
-import kotlinx.coroutines.launch
+import com.example.golden_rose_apk.ViewModel.ProductsViewModel
+import com.example.golden_rose_apk.model.ProductFirestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoriesScreen(navController: NavController, marketplaceViewModel: MarketplaceViewModel = viewModel()) {
-    val allSkins by marketplaceViewModel.skins.collectAsState()
-    val searchQuery by marketplaceViewModel.searchQuery.collectAsState()
-    val isLoading by marketplaceViewModel.isLoading.collectAsState()
-    val error by marketplaceViewModel.error.collectAsState()
+fun CategoriesScreen(
+    navController: NavController,
+    productsViewModel: ProductsViewModel = viewModel()
+) {
+    val products by productsViewModel.products.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(error) {
-        error?.let { message ->
-            scope.launch { snackbarHostState.showSnackbar(message) }
-        }
+    val filteredProducts = products.filter { product ->
+        product.name.contains(searchQuery, ignoreCase = true)
     }
-
-    val filteredSkins = allSkins.filter { it.name.contains(searchQuery, ignoreCase = true) }
 
     val navItems = listOf(
         BottomNavItem("Inicio", Icons.Filled.Home, "home"),
@@ -97,7 +89,10 @@ fun CategoriesScreen(navController: NavController, marketplaceViewModel: Marketp
             )
         },
         bottomBar = {
-            HomeBottomNavigationBar(navController = navController, navItems = navItems)
+            HomeBottomNavigationBar(
+                navController = navController,
+                navItems = navItems
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
@@ -107,9 +102,10 @@ fun CategoriesScreen(navController: NavController, marketplaceViewModel: Marketp
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
+            // Buscador
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = marketplaceViewModel::onSearchQueryChange,
+                onValueChange = { searchQuery = it },
                 label = { Text("Buscar por nombre") },
                 leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                 modifier = Modifier
@@ -118,7 +114,8 @@ fun CategoriesScreen(navController: NavController, marketplaceViewModel: Marketp
                 singleLine = true
             )
 
-            if (isLoading && allSkins.isEmpty()) {
+            // Estado de carga sencillo
+            if (products.isEmpty() && searchQuery.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,15 +126,24 @@ fun CategoriesScreen(navController: NavController, marketplaceViewModel: Marketp
                 }
             }
 
+            // Lista de productos (skins)
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                items(filteredSkins) { skin ->
-                    SkinCard(skin) { navController.navigate("productDetail/${skin.id}") }
+                items(filteredProducts) { product ->
+                    SkinCard(
+                        product = product,
+                        onSkinClick = {
+                            navController.navigate("productDetail/${product.id}")
+                        }
+                    )
                 }
 
-                if (filteredSkins.isEmpty() && searchQuery.isNotEmpty() && !isLoading) {
+                if (filteredProducts.isEmpty() &&
+                    searchQuery.isNotEmpty() &&
+                    products.isNotEmpty()
+                ) {
                     item {
                         Text(
                             "No encontramos resultados para \"$searchQuery\"",
@@ -152,7 +158,10 @@ fun CategoriesScreen(navController: NavController, marketplaceViewModel: Marketp
 }
 
 @Composable
-fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
+fun SkinCard(
+    product: ProductFirestore,
+    onSkinClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,32 +173,33 @@ fun SkinCard(skin: Skin, onSkinClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Imagen desde la URL que ya traes (Valorant API)
             AsyncImage(
-                model = "file:///android_asset/${skin.image}",
-                contentDescription = skin.name,
+                model = product.image,
+                contentDescription = product.name,
                 modifier = Modifier.size(96.dp),
                 contentScale = ContentScale.Crop
             )
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(skin.name, fontWeight = FontWeight.Bold)
-                Text(
-                    skin.Type ?: "",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Text(product.name, fontWeight = FontWeight.Bold)
+
+                // Si tienes tipo/categoría en el modelo, úsalo aquí
+                product.type?.let {
+                    Text(
+                        it,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
                 Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    "$${skin.price}",
+                    "$${product.price}",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
         }
     }
-}
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun CategoriesScreenPreview() {
-    CategoriesScreen(navController = rememberNavController())
 }

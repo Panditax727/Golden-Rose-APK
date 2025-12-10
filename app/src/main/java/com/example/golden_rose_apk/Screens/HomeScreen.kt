@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingCart
@@ -26,17 +27,14 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.golden_rose_apk.model.BottomNavItem
 import com.example.golden_rose_apk.model.Category
-import com.example.golden_rose_apk.model.Product
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.example.golden_rose_apk.ViewModel.CartViewModel
-import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
-import com.example.golden_rose_apk.config.Constants
-import com.example.golden_rose_apk.model.Skin
+import com.example.golden_rose_apk.ViewModel.ProductsViewModel
+import com.example.golden_rose_apk.model.ProductFirestore
 import kotlinx.coroutines.launch
 
 
@@ -45,23 +43,12 @@ import kotlinx.coroutines.launch
 fun HomeScreen(
     navController: NavController,
     isGuest: Boolean,
-    marketplaceViewModel: MarketplaceViewModel,
+    productsViewModel: ProductsViewModel,
     cartViewModel: CartViewModel
 ) {
-    val greeting = if (isGuest) {
-        "Bienvenido Invitado a Golden Rose"
-    } else {
-        "Bienvenido a Golden Rose"
-    }
-    val skins by marketplaceViewModel.skins.collectAsState(initial = emptyList())
 
-    LaunchedEffect(Unit) {
-        marketplaceViewModel.refresh()  // o la función que cargue las skins
-    }
-
+    val products by productsViewModel.products.collectAsState()
     var searchText by remember { mutableStateOf("") }
-
-    // Snackbar Mostrar mensaje
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -78,7 +65,7 @@ fun HomeScreen(
     val navItems = listOf(
         BottomNavItem("Inicio", Icons.Filled.Home, "home"),
         BottomNavItem("Categorías", Icons.Filled.Category, "categories"),
-        BottomNavItem("Blogs", Icons.Filled.Article, "blogs"),
+        BottomNavItem("Blogs", Icons.AutoMirrored.Filled.Article, "blogs"),
         BottomNavItem("Perfil", Icons.Filled.Person, "perfil")
     )
 
@@ -86,7 +73,6 @@ fun HomeScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
-            // TOP BAR CON MÚLTIPLES BOTONES - VERSIÓN MEJORADA
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -116,12 +102,12 @@ fun HomeScreen(
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color.White,
                             unfocusedBorderColor = Color.White.copy(alpha = 0.7f),
-                            focusedLabelColor = Color.White.copy(alpha = 0.9f), // Más visible
+                            focusedLabelColor = Color.White.copy(alpha = 0.9f),
                             unfocusedLabelColor = Color.White.copy(alpha = 0.6f),
                             focusedTextColor = Color.White,
                             unfocusedTextColor = Color.White,
                             cursorColor = Color.White,
-                            focusedContainerColor = Color.White.copy(alpha = 0.1f), // Fondo sutil
+                            focusedContainerColor = Color.White.copy(alpha = 0.1f),
                             unfocusedContainerColor = Color.White.copy(alpha = 0.05f)
                         ),
                         leadingIcon = {
@@ -172,6 +158,7 @@ fun HomeScreen(
                     }
 
                     // Botón de corazón (favoritos) - MEJORADO
+
                     if (!isGuest) {
                         IconButton(
                             onClick = { navController.navigate("favorites") },
@@ -203,25 +190,6 @@ fun HomeScreen(
                                 .size(22.dp)
                                 .align(Alignment.Center)
                         )
-
-                        // Badge del carrito - MEJORADO
-                        //Box(
-                            //modifier = Modifier
-                                //.size(18.dp) // Un poco más grande
-                                //.background(
-                                   // Color(0xFFFF5252), // Rojo más vibrante
-                                   // CircleShape
-                                //)
-                               // .align(Alignment.TopEnd)
-                       // ) {
-                            //Text(
-                               // text = "3",
-                               // color = Color.White,
-                               // fontSize = 9.sp, // Un poco más grande
-                               // fontWeight = FontWeight.Bold, // Negrita
-                                //modifier = Modifier.align(Alignment.Center)
-                            //)
-                        //}
                     }
                 }
             }
@@ -245,7 +213,7 @@ fun HomeScreen(
 
             Column {
                 Text(
-                    text = "Bienvenido a Golden Rose",
+                    text = if (isGuest) "Bienvenido Invitado a Golden Rose" else "Bienvenido a Golden Rose",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF5649A5)
@@ -289,6 +257,32 @@ fun HomeScreen(
                 )
             }
 
+            if (products.isEmpty()) {
+                Text("No hay productos disponibles")
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.height(420.dp)
+                ) {
+                    items(products) { product ->
+                        ProductCard(
+                            product = product,
+                            navController = navController,
+                            cartViewModel = cartViewModel,
+                            onAddToCart = {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "✅ ${product.name} agregado al carrito"
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+
             // Grid de productos más vendidos
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
@@ -296,21 +290,21 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.height(400.dp)
             ) {
-                items(skins) { skin ->
+                items(products) { product ->
                     ProductCardFromSkin(
-                        skin = skin,
+                        skin = product,
                         navController = navController,
                         cartViewModel = cartViewModel,
                         onAddToCart = {
                             scope.launch {
                                 snackbarHostState.showSnackbar(
-                                    message = "✅ ${skin.name} agregada al carrito",
+                                    message = "✅ \${skin.name} agregada al carrito",
                                     duration = SnackbarDuration.Short
                                 )
                             }
                         },
                         onClick = {
-                            navController.navigate("productDetail/${skin.id}")
+                            navController.navigate("productDetail/${product.id}")
                         }
                     )
                 }
@@ -369,11 +363,16 @@ fun CategoryCard(category: Category) {
 
 // Componente de tarjeta de producto
 @Composable
-fun ProductCard(product: Product, navController: NavController) {
+fun ProductCard(
+    product: ProductFirestore,
+    navController: NavController,
+    cartViewModel: CartViewModel,
+    onAddToCart: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { navController.navigate("product_detail/${product.name}") },
+            .clickable { navController.navigate("productDetail/${product.id}") },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
@@ -383,22 +382,15 @@ fun ProductCard(product: Product, navController: NavController) {
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            // Imagen del producto
-            Box(
+            AsyncImage(
+                model = product.image,
+                contentDescription = product.name,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(product.backgroundColor),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Diamond,
-                    contentDescription = product.name,
-                    tint = Color(0xFF5649A5),
-                    modifier = Modifier.size(50.dp)
-                )
-            }
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -414,7 +406,7 @@ fun ProductCard(product: Product, navController: NavController) {
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = product.price,
+                text = "$${product.price}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF5649A5),
@@ -531,118 +523,67 @@ fun NotificationBadge(count: Int, onClick: () -> Unit) {
 
 @Composable
 fun ProductCardFromSkin(
-    skin: Skin,
+    skin: ProductFirestore,
     navController: NavController,
     cartViewModel: CartViewModel,
     onAddToCart: () -> Unit,
     onClick: () -> Unit
 ) {
-
-    val context = LocalContext.current
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {
-                println("📍 Navegando a detalle de skin ID: ${skin.id}")
-                navController.navigate("product_detail/${skin.id}")
-            },
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            // Manejar diferentes formatos de imagen
-            val imageModifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .clip(RoundedCornerShape(12.dp))
+        Column(modifier = Modifier.padding(12.dp)) {
 
-            if (skin.hasImageData) {
-                // Si tiene datos de imagen desde API
-                AsyncImage(
-                    model = Constants.productoImagenEndpoint(skin.id.toString()),
-                    contentDescription = skin.name,
-                    modifier = imageModifier,
-                    contentScale = ContentScale.Crop
-                )
-            } else if (skin.imageUrl?.isNotEmpty() == true) {
-                // Si tiene URL de imagen
-                AsyncImage(
-                    model = skin.imageUrl,
-                    contentDescription = skin.name,
-                    modifier = imageModifier,
-                    contentScale = ContentScale.Crop
-                )
-            } else if (skin.image?.isNotEmpty() == true) {
-                // Si tiene imagen en assets
-                AsyncImage(
-                    model = "file:///android_asset/${skin.image}",
-                    contentDescription = skin.name,
-                    modifier = imageModifier,
-                    contentScale = ContentScale.Crop,
-                )
-            } else {
-                // Imagen por defecto
-                Box(
-                    modifier = imageModifier
-                        .background(Color(0xFF5649A5).copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        Icons.Filled.Diamond,
-                        contentDescription = skin.name,
-                        tint = Color(0xFF5649A5),
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
-            }
+            AsyncImage(
+                model = skin.image,
+                contentDescription = skin.name,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = skin.name ?: "Sin nombre",
+                text = skin.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color.Black,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
+                overflow = TextOverflow.Ellipsis
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "$${skin.price ?: "0.00"}",
+                text = "$${skin.price}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF5649A5),
-                modifier = Modifier.fillMaxWidth()
+                color = Color(0xFF5649A5)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Button(
                 onClick = {
-                    println("➕ Agregando al carrito: ${skin.name}")
                     cartViewModel.addToCart(skin)
                     onAddToCart()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF5649A5)
-                ),
-                shape = RoundedCornerShape(12.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5649A5))
             ) {
                 Text("Agregar al carrito", fontSize = 12.sp)
             }
         }
     }
 }
+
 
 @Composable
 fun CartBadge(count: Int, onClick: () -> Unit) {
@@ -680,6 +621,7 @@ fun CartBadge(count: Int, onClick: () -> Unit) {
         }
     }
 }
+
 
 
 
