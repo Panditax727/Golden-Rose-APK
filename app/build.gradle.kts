@@ -97,7 +97,7 @@ dependencies {
     // implementation(libs.firebase.auth.ktx)
     // implementation("com.google.firebase:firebase-auth:22.3.1")
     // implementation("com.google.firebase:firebase-firestore:24.9.1")
-
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
