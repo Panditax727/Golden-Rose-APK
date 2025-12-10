@@ -44,6 +44,12 @@ import java.io.FileOutputStream
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,6 +132,33 @@ fun PerfilScreen(
         BottomNavItem("Blogs", Icons.Filled.Article, "blogs"),
         BottomNavItem("Perfil", Icons.Filled.Person, "perfil")
     )
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            settingsViewModel.setPushNotificationsEnabled(true)
+            FirebaseMessaging.getInstance().subscribeToTopic("all")
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        Log.d("FCM", "Suscripción a notificaciones activada tras permiso")
+                        Toast.makeText(
+                            context,
+                            "Notificaciones activadas",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+        } else {
+            settingsViewModel.setPushNotificationsEnabled(false)
+            Log.d("FCM", "Usuario negó el permiso de notificaciones")
+            Toast.makeText(
+                context,
+                "Permiso de notificaciones denegado",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -275,20 +308,61 @@ fun PerfilScreen(
                 icon = Icons.Default.Notifications,
                 checked = pushNotificationsEnabled,
                 onCheckedChange = { enabled ->
-                    settingsViewModel.setPushNotificationsEnabled(enabled)
-
                     if (enabled) {
-                        FirebaseMessaging.getInstance().subscribeToTopic("all")
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Log.d("FCM", "Suscripción a notificaciones activada")
-                                }
+                        // Usuario quiere activar
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val hasPermission = ContextCompat.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS
+                            ) == PackageManager.PERMISSION_GRANTED
+
+                            if (hasPermission) {
+                                // Ya tiene permiso → activar y suscribirse
+                                settingsViewModel.setPushNotificationsEnabled(true)
+                                FirebaseMessaging.getInstance().subscribeToTopic("all")
+                                    .addOnCompleteListener { task ->
+                                        if (task.isSuccessful) {
+                                            Log.d("FCM", "Suscripción a notificaciones activada")
+                                            Toast.makeText(
+                                                context,
+                                                "Notificaciones activadas",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    }
+                            } else {
+                                // Pedir permiso
+                                notificationPermissionLauncher.launch(
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                )
                             }
+                        } else {
+                            // Android < 13 → no necesita permiso
+                            settingsViewModel.setPushNotificationsEnabled(true)
+                            FirebaseMessaging.getInstance().subscribeToTopic("all")
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Log.d("FCM", "Suscripción a notificaciones activada (<13)")
+                                        Toast.makeText(
+                                            context,
+                                            "Notificaciones activadas",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
+                        }
                     } else {
+                        // Usuario desactiva el switch
+                        settingsViewModel.setPushNotificationsEnabled(false)
                         FirebaseMessaging.getInstance().unsubscribeFromTopic("all")
                             .addOnCompleteListener { task ->
                                 if (task.isSuccessful) {
                                     Log.d("FCM", "Suscripción a notificaciones desactivada")
+                                    Toast.makeText(
+                                        context,
+                                        "Notificaciones desactivadas",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
                     }
