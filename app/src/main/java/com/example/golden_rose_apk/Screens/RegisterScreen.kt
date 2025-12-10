@@ -52,6 +52,26 @@ fun RegisterScreen(navController: NavController) {
     var emailError by remember { mutableStateOf("") }
     var termsError by remember { mutableStateOf("") }
 
+    val textFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = Color(0xFF5649A5),
+        unfocusedBorderColor = Color(0xFF5649A5).copy(alpha = 0.5f),
+        focusedLabelColor = Color(0xFF5649A5),
+        unfocusedLabelColor = Color.Gray,
+        cursorColor = Color(0xFF5649A5),
+
+        focusedTextColor = Color.Black,
+        unfocusedTextColor = Color.Black,
+        disabledTextColor = Color.Black.copy(alpha = 0.6f),
+
+        errorBorderColor = Color.Red,
+        errorCursorColor = Color.Red,
+
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        disabledContainerColor = Color.White,
+        errorContainerColor = Color.White
+    )
+
     // Validaciones de contraseña
     val hasMinLength = password.length >= 8
     val hasMaxLength = password.length <= 100
@@ -268,11 +288,7 @@ fun RegisterScreen(navController: NavController) {
                     label = { Text("Ingresa tu nombre de usuario") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = Color(0xFF5649A5),
-                        focusedLabelColor = Color(0xFF5649A5),
-                        errorBorderColor = Color.Red
-                    ),
+                    colors = textFieldColors,
                     isError = userError.isNotEmpty(),
                     supportingText = {
                         if (userError.isNotEmpty()) {
