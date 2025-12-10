@@ -40,23 +40,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.golden_rose_apk.Screens.HomeBottomNavigationBar
 import com.example.golden_rose_apk.ViewModel.CartViewModel
+import com.example.golden_rose_apk.ViewModel.LocalCartItem
 import com.example.golden_rose_apk.model.BottomNavItem
-import com.example.golden_rose_apk.model.CartItemDto
+import com.example.golden_rose_apk.utils.formatPrice
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
     val cartItems by cartViewModel.cartItems.collectAsState()
-    val subtotal = cartItems.sumOf { (it.precioUnitario ?: 0.0) * it.cantidad }
+    val subtotal = cartItems.sumOf { cartItem ->
+        (cartItem.skin.price ?: 0.0) * cartItem.quantity
+    }
     val commission = if (subtotal > 0) subtotal * 0.05 else 0.0
     val shipping = if (subtotal > 0) 1490.0 else 0.0
     val total = subtotal + commission + shipping
 
-    // Configuración del Bottom Navigation
     val navItems = listOf(
         BottomNavItem("Inicio", Icons.Filled.Home, "home"),
         BottomNavItem("Categorías", Icons.Filled.Category, "categories"),
@@ -67,39 +71,20 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = "Carrito de Compras",
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                },
+                title = { Text("Carrito de Compras", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
+                        Icon(Icons.Default.ArrowBack, "Volver", tint = Color.White)
                     }
                 },
-                actions = {
-                    // Espacio invisible para balancear el navigationIcon
-                    Spacer(modifier = Modifier.width(48.dp))
-                },
+                actions = { Spacer(modifier = Modifier.width(48.dp)) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color(0xFF5649A5),
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    titleContentColor = Color.White
                 )
             )
         },
-        bottomBar = {
-            HomeBottomNavigationBar(
-                navController = navController,
-                navItems = navItems
-            )
-        }
+        bottomBar = { HomeBottomNavigationBar(navController = navController, navItems = navItems) }
     ) { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp)) {
             if (cartItems.isEmpty()) {
@@ -113,10 +98,7 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                LazyColumn(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(cartItems) { item ->
                         CartItemRow(item = item, viewModel = cartViewModel)
                     }
@@ -129,11 +111,9 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
                 SummaryRow("Comisión:", commission)
                 Spacer(modifier = Modifier.height(8.dp))
                 Divider()
+
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Total:", fontWeight = FontWeight.Bold)
                     Text("$${total.formatPrice()}", fontWeight = FontWeight.Bold)
                 }
@@ -150,9 +130,8 @@ fun CartScreen(navController: NavController, cartViewModel: CartViewModel) {
     }
 }
 
-
 @Composable
-fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
+fun CartItemRow(item: LocalCartItem, viewModel: CartViewModel) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -160,43 +139,56 @@ fun CartItemRow(item: CartItemDto, viewModel: CartViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-                Text(item.nombre ?: "", maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                Text("Cantidad: ${item.cantidad}")
-                Text("Subtotal: $${((item.precioUnitario ?: 0.0) * item.cantidad).formatPrice()}", fontWeight = FontWeight.Bold)
-            }
+                Text(item.skin.name ?: "Sin nombre", maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text("Cantidad: ${item.quantity}")
+                Text(
+                    "Subtotal: $${((item.skin.price ?: 0.0) * item.quantity).formatPrice()}",
+                    fontWeight = FontWeight.Bold
+                )
 
+
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.productoId.toString(), item.cantidad - 1)  },
-                    enabled = item.cantidad > 1,
+                    onClick = { viewModel.updateQuantity(item.skin.id, item.quantity - 1) },
+                    enabled = item.quantity > 1,
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) { Text("-") }
 
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("${item.cantidad}")
+                Text("${item.quantity}")
                 Spacer(modifier = Modifier.width(8.dp))
 
                 OutlinedButton(
-                    onClick = { viewModel.updateQuantity(item.productoId.toString(), item.cantidad + 1)  },
+                    onClick = { viewModel.updateQuantity(item.skin.id, item.quantity + 1) },
                     modifier = Modifier.size(40.dp),
                     contentPadding = PaddingValues(0.dp)
                 ) { Text("+") }
 
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(
-                    onClick = { viewModel.removeFromCart(item.productoId.toString())  },
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Eliminar"
-                    )
+                IconButton(onClick = { viewModel.removeFromCart(item.skin.id) }) {
+                    Icon(Icons.Default.Delete, "Eliminar")
                 }
+
             }
         }
     }
 }
+
+@Composable
+fun SummaryRowText(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label)
+        Text(value)
+    }
+}
+
+
+
 
 
 

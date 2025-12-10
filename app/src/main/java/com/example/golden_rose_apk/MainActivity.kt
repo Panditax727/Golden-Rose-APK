@@ -39,11 +39,14 @@ import com.example.golden_rose_apk.ViewModel.MarketplaceViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModel
 import com.example.golden_rose_apk.ViewModel.SettingsViewModelFactory
 import com.google.firebase.messaging.FirebaseMessaging
+import com.google.firebase.FirebaseApp
 
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        FirebaseApp.initializeApp(this)
 
         // OBTENER TOKEN (solo para debug)
         FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
@@ -65,14 +68,16 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val authViewModel: AuthViewModel = viewModel()
             val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModelFactory(application))
             val currentTheme by settingsViewModel.appTheme.collectAsState()
             val isDark = currentTheme == "dark"
 
+
             MaterialTheme(
                 colorScheme = if (isDark) darkColorScheme() else lightColorScheme()
             ) {
-
+                val cartViewModel: CartViewModel = viewModel()
                 val navController = rememberNavController()
                 NavHost(
                     navController = navController, startDestination = "welcome") {
@@ -124,12 +129,10 @@ class MainActivity : ComponentActivity() {
                     // ========== PANTALLAS DE PRODUCTOS ==========
                     composable("marketplace") {
                         val marketplaceViewModel: MarketplaceViewModel = viewModel()
-                        val cartViewModel: CartViewModel = viewModel()   // <-- AGREGAR ESTO
-
                         MarketplaceScreen(
                             navController = navController,
                             viewModel = marketplaceViewModel,
-                            cartViewModel = cartViewModel               // <-- PASARLO
+                            cartViewModel = cartViewModel
                         )
                     }
 
@@ -138,7 +141,6 @@ class MainActivity : ComponentActivity() {
                         val productId = backStackEntry.arguments
                             ?.getString("productId")
                             ?: ""
-                        val cartViewModel: CartViewModel = viewModel()
                         val marketplaceViewModel: MarketplaceViewModel = viewModel()
 
                         ProductDetailScreen(
@@ -159,18 +161,18 @@ class MainActivity : ComponentActivity() {
 
                     // ========== PANTALLAS DEL CARRITO Y CHECKOUT ==========
                     composable("cart") {
-                        val cartViewModel: CartViewModel = viewModel()
                         CartScreen(navController, cartViewModel)
                     }
 
 
                     composable("checkout") {
-                        val cartViewModel: CartViewModel = viewModel()
-                        val authViewModel: AuthViewModel = viewModel()
                         CheckoutScreen(
-                            navController = navController
+                            navController = navController,
+                            cartViewModel = cartViewModel,
+                            authViewModel = authViewModel
                         )
                     }
+
 
                     composable("payment_success/{orderId}") { backStackEntry ->
                         val orderId = backStackEntry.arguments?.getString("orderId") ?: ""

@@ -22,17 +22,22 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import com.example.golden_rose_apk.ViewModel.AuthViewModel
+import com.example.golden_rose_apk.ViewModel.CartViewModel
 import com.example.golden_rose_apk.model.CheckoutItem
+import com.example.golden_rose_apk.utils.formatPrice
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CheckoutScreen(navController: NavController) {
+fun CheckoutScreen(
+    navController: NavController,
+    cartViewModel: CartViewModel,
+    authViewModel: AuthViewModel
+) {
     // Datos de ejemplo (simulación sin carrito)
     val checkoutItems = listOf(
         CheckoutItem("Skin Rosa", 1, 4990.0),
@@ -108,12 +113,11 @@ fun CheckoutScreen(navController: NavController) {
     }
 }
 
-fun Double.formatPrice(): String {
-    return String.format("%.0f", this)
-}
 
 @Composable
-fun SummaryRow(label: String, value: Double) {
+fun SummaryRow(
+    label: String, value: Double
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -121,12 +125,4 @@ fun SummaryRow(label: String, value: Double) {
         Text(label, style = MaterialTheme.typography.bodyMedium)
         Text("$${value.formatPrice()}", style = MaterialTheme.typography.bodyMedium)
     }
-}
-
-
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun CheckoutScreenPreview() {
-    CheckoutScreen(navController = rememberNavController())
 }

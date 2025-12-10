@@ -27,6 +27,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import java.util.Calendar
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.Timestamp
+import android.util.Log
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,6 +59,12 @@ fun RegisterScreen(navController: NavController) {
     val hasLowerCase = password.any { it.isLowerCase() }
     val hasSpecialChar = password.any { !it.isLetterOrDigit() }
     val hasNumber = password.any { it.isDigit() }
+
+    // Convalidacion de Registro
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var firebaseError by remember { mutableStateOf<String?>(null) }
+
 
     // Función para validar email
     fun isValidEmail(email: String): Boolean {
@@ -557,49 +568,89 @@ fun RegisterScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Botón Crear Cuenta
-            Button(
-                onClick = {
-                    if (validateForm()) {
-                        // Aquí iría la lógica de registro real con API
-                        // Por ahora solo navega
-                        navController.navigate("home") {
-                            popUpTo("register") { inclusive = true }
-                        }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF5649A5),
-                    disabledContainerColor = Color.Gray
-                ),
-                shape = RoundedCornerShape(12.dp),
-                enabled = validateForm()
-            ) {
+            if (firebaseError != null) {
                 Text(
-                    "Crear Cuenta",
-                    fontSize = 18.sp,
-                    color = Color.White,
-                    fontWeight = FontWeight.SemiBold
+                    text = firebaseError!!,
+                    color = Color.Red,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Botón Crear Cuenta
+            Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading && validateForm(),
+                onClick = {
+                    isLoading = true
+                    firebaseError = null
 
-            // Enlace para iniciar sesión
-            Text(
-                text = "¿Ya tienes cuenta? Inicia sesión",
-                fontSize = 14.sp,
-                color = Color(0xFF5649A5),
-                modifier = Modifier
-                    .clickable { navController.navigate("login") }
-                    .padding(bottom = 24.dp)
-            )
+                    val auth = FirebaseAuth.getInstance()
+                    val firestore = FirebaseFirestore.getInstance()
+
+                    auth.createUserWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                val uid = auth.currentUser!!.uid
+                                firestore.collection("users").document(uid)
+                                    .set(
+                                        mapOf(
+                                            "username" to user,
+                                            "email" to email,
+                                            "createdAt" to Timestamp.now()
+                                        )
+                                    )
+                                    .addOnSuccessListener {
+                                        isLoading = false
+                                        showSuccessDialog = true // ✅ AQUÍ
+                                    }
+                                    .addOnFailureListener {
+                                        isLoading = false
+                                        firebaseError = "Error guardando datos"
+                                    }
+                            } else {
+                                isLoading = false
+                                firebaseError = task.exception?.localizedMessage
+                            }
+                        }
+                }
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp)
+                } else {
+                    Text("Crear Cuenta")
+                }
+            }
         }
     }
+
+    if (showSuccessDialog) {
+        AlertDialog(
+            onDismissRequest = {},
+            icon = {
+                Icon(
+                    Icons.Filled.CheckCircle,
+                    contentDescription = null,
+                    tint = Color(0xFF4CAF50)
+                )
+            },
+            title = { Text("Cuenta creada") },
+            text = { Text("Tu cuenta se creó con éxito. Ahora inicia sesión.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSuccessDialog = false
+                        navController.navigate("login") {
+                            popUpTo("register") { inclusive = true }
+                        }
+                    }
+                ) {
+                    Text("Ir al Login")
+                }
+            }
+        )
+    }
 }
+
 
 @Composable
 fun SelectorFechas(

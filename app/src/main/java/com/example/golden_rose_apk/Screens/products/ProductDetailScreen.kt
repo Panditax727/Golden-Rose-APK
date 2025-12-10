@@ -262,7 +262,7 @@ fun ProductDetailScreen(
                             icon = Icons.Filled.ShoppingCart,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            cartViewModel.addToCart(skin.id)
+                            cartViewModel.addToCart(skin)
                             scope.launch {
                                 snackbarHostState.showSnackbar("${skin.name} agregada al carrito")
                             }

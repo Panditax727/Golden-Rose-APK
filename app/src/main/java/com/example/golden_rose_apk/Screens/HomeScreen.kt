@@ -629,7 +629,7 @@ fun ProductCardFromSkin(
             Button(
                 onClick = {
                     println("➕ Agregando al carrito: ${skin.name}")
-                    cartViewModel.addToCart(skin.id.toString())
+                    cartViewModel.addToCart(skin)
                     onAddToCart()
                 },
                 modifier = Modifier.fillMaxWidth(),

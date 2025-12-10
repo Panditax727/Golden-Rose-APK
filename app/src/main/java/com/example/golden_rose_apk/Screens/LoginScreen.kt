@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -43,11 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.golden_rose_apk.R
-import com.example.golden_rose_apk.config.SessionManager
-import com.example.golden_rose_apk.config.api.ApiClient
-import com.example.golden_rose_apk.model.LoginRequest
-import com.example.golden_rose_apk.service.AuthService
-import kotlinx.coroutines.launch
+import com.google.firebase.auth.FirebaseAuth
 import java.util.regex.Pattern
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -280,33 +277,31 @@ fun LoginScreen(navController: NavController) {
 
             Button(
                 onClick = {
-                    // Validar formulario antes de proceder
                     if (validateForm() && !loading) {
                         loading = true
-                        scope.launch {
-                            try {
-                                val service = ApiClient.getAuthClient(context).create(AuthService::class.java)
 
+                        val auth = FirebaseAuth.getInstance()
 
-                                val resp = service.login(LoginRequest(email = email, password = password))
-                                if (resp.isSuccessful) {
-                                    resp.body()?.let { auth ->
-                                        auth.token?.let { token -> SessionManager(context).saveToken(token) }
-                                        auth.rol?.let { role -> SessionManager(context).saveUserRole(role) }
-                                        navController.navigate("home") { popUpTo("login") { inclusive = true } }
-                                        Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
-                                    } ?: run {
-                                        Toast.makeText(context, "Error: Token no recibido", Toast.LENGTH_LONG).show()
-                                    }
-                                } else {
-                                    Toast.makeText(context, "Error: ${resp.code()}", Toast.LENGTH_LONG).show()
-                                }
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Error de conexión: ${e.message}", Toast.LENGTH_LONG).show()
-                            } finally {
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
                                 loading = false
+
+                                if (task.isSuccessful) {
+                                    Toast.makeText(context, "¡Bienvenido!", Toast.LENGTH_SHORT).show()
+
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        task.exception?.localizedMessage
+                                            ?: "Error al iniciar sesión",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
                             }
-                        }
                     }
                 },
                 modifier = Modifier
@@ -328,6 +323,27 @@ fun LoginScreen(navController: NavController) {
                 } else {
                     Text("Iniciar Sesión", color = Color.White)
                 }
+            }
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "¿No tienes una cuenta? ",
+                    fontSize = 14.sp,
+                    color = Color.Black
+                )
+                Text(
+                    text = "Crear cuenta",
+                    fontSize = 14.sp,
+                    color = Color(0xFF5649A5),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable {
+                        navController.navigate("register")
+                    }
+                )
             }
         }
     }

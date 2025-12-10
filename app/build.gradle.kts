@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "com.example.golden_rose_apk"
-    compileSdk = 34  // Corregido: usa número directamente
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.golden_rose_apk"
         minSdk = 24
-        targetSdk = 34  // Actualizado a 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -50,6 +50,7 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs.useLegacyPackaging = false
     }
 }
 
@@ -63,48 +64,33 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // DEPENDENCIAS NECESARIAS PARA TU PROYECTO:
-
-    // 1. Navigation Compose (esencial)
     implementation("androidx.navigation:navigation-compose:2.7.7")
-
-    // 2. ViewModel (para manejar estado)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
-
-    // 3. Material Icons (para los iconos)
     implementation("androidx.compose.material:material-icons-extended:1.6.7")
 
-    // 4. Si quieres usar Retrofit para API
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // 5. Coil para cargar imágenes
     implementation("io.coil-kt:coil-compose:2.5.0")
 
-    // Importar la plataforma BOM de Firebase
+    // ============= FIREBASE (CORRECTO) =============
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
 
-    // Ahora puedes usar las dependencias sin versión
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation(libs.firebase.crashlytics.buildtools)
+    // =================================================
 
+    // ELIMINADO (causaba conflictos)
+    // implementation(libs.firebase.firestore.ktx)
+    // implementation(libs.firebase.auth.ktx)
+    // implementation("com.google.firebase:firebase-auth:22.3.1")
+    // implementation("com.google.firebase:firebase-firestore:24.9.1")
 
-    // ELIMINA estas líneas duplicadas (ya están en el BOM):
-    // implementation("androidx.compose.material3:material3:1.2.1")
-    // implementation("androidx.compose.ui:ui:1.7.5")
-    // implementation("androidx.compose.ui:ui-tooling-preview:1.7.5")
-    // implementation("androidx.activity:activity-compose:1.9.2")
-    // implementation("androidx.compose.material:material-icons-core:1.7.5")
-    // implementation("androidx.compose.material:material-icons-extended:1.7.5")
-
-    // ELIMINA estas si no las necesitas:
-    //implementation(libs.play.services.maps)        // Si no usas Google Maps
-    //implementation(libs.play.services.analytics.impl) // Si no usas Analytics
-    //implementation(libs.androidx.tv.material)      // Si no es app para TV
-
-    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -20,6 +20,13 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     private val _userRole = MutableStateFlow<String?>(null)
     val userRole: StateFlow<String?> = _userRole
 
+    private val _authToken = MutableStateFlow<String?>(null)
+    val authToken: StateFlow<String?> = _authToken
+
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId
+
+
     init {
         checkLoginStatus()
     }
